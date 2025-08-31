@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Games from "./pages/Games";
 import Mines from "./pages/games/Mines";
 import Dice from "./pages/games/Dice";
+import Blackjack from "./pages/games/Blackjack";
 import Wallet from "./pages/Wallet";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
@@ -30,6 +31,7 @@ const App = () => (
                 <Route path="/games" element={<Games />} />
                 <Route path="/games/mines" element={<Mines />} />
                 <Route path="/games/dice" element={<Dice />} />
+                <Route path="/games/blackjack" element={<Blackjack />} />
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -39,6 +39,17 @@ const Games = () => {
       difficulty: 'Easy',
       maxPayout: '98.99x',
       players: '856'
+    },
+    {
+      name: 'Blackjack',
+      description: 'Classic card game. Get as close to 21 as possible. Double down and split for bigger wins!',
+      icon: Coins,
+      path: '/games/blackjack',
+      color: 'text-neon-green',
+      bgColor: 'from-neon-green/20 to-neon-green/5',
+      difficulty: 'Medium',
+      maxPayout: '2.5x',
+      players: '2.1k'
     }
   ];
 
