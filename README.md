@@ -1,73 +1,61 @@
-# Welcome to your Lovable project
+# StakeSim - Virtual Casino Experience
 
-## Project info
+Experience the thrill of casino gaming with virtual credits! StakeSim is a full-stack casino simulation that mimics sites like Stake.com but uses only fake money for safe, risk-free entertainment.
 
-**URL**: https://lovable.dev/projects/45007562-d3c5-44bf-b36f-d8c9c0139258
+## 🎮 Features
 
-## How can I edit this code?
+- **Multiple Casino Games**: Mines, Dice, and more coming soon
+- **Virtual Credits System**: Start with $1,000 fake credits
+- **User Profiles**: Simple username-based accounts
+- **Real-time Balance Tracking**: Watch your virtual balance change
+- **Betting History**: Track all your wins and losses
+- **Leaderboards**: Compete with other players
+- **Responsive Design**: Works on desktop and mobile
+- **Dark Gaming Theme**: Modern UI with neon accents
 
-There are several ways of editing your application.
+## 🎯 Available Games
 
-**Use Lovable**
+### Mines
+Navigate through a minefield to multiply your winnings. Choose 1-20 mines and reveal safe tiles to increase your payout. Cash out anytime before hitting a bomb!
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/45007562-d3c5-44bf-b36f-d8c9c0139258) and start prompting.
+### Dice
+Classic dice game with customizable odds. Set your "roll under" target and watch the dice roll. Higher risk = higher rewards!
 
-Changes made via Lovable will be committed automatically to this repo.
+**Coming Soon**: Roulette, Crash, Slots, and more!
 
-**Use your preferred IDE**
+## 🔒 Safety First
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+⚠️ **This is a simulation using virtual credits only. No real money is involved.**
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- All transactions use fake credits
+- No deposits or withdrawals
+- Safe learning environment for understanding casino mechanics
+- Reset your balance anytime back to $1,000
 
-Follow these steps:
+## 🚀 Quick Start
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. Enter any username (no password needed)
+2. Start with $1,000 virtual credits
+3. Choose your game and place bets
+4. Track your progress on the leaderboard
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🛠 Technology Stack
 
-# Step 3: Install the necessary dependencies.
-npm i
+- **Frontend**: React, TypeScript, Tailwind CSS
+- **State Management**: React Context
+- **Routing**: React Router
+- **UI Components**: shadcn/ui
+- **Styling**: Custom casino theme with neon accents
+- **Data Storage**: Browser localStorage
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## 🎨 Design
 
-**Edit a file directly in GitHub**
+Modern dark theme casino interface inspired by popular crypto casino sites:
+- Deep blacks and grays with vibrant neon green/blue highlights  
+- Smooth animations and hover effects
+- Glowing buttons and cards
+- Responsive gaming-focused layout
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/45007562-d3c5-44bf-b36f-d8c9c0139258) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+**Disclaimer**: This application is for entertainment purposes only. It simulates casino gaming with virtual credits and should not be used as a substitute for real gambling education or financial advice.
