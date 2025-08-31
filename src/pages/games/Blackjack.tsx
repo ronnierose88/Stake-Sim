@@ -452,10 +452,10 @@ const Blackjack = () => {
                   <div 
                     key={index}
                     className={`w-16 h-24 bg-white text-black rounded-lg flex flex-col items-center justify-center border-2 shadow-lg ${
-                      index === 1 && gameState === 'playing' && !isDealing ? 'bg-gradient-to-br from-primary/20 to-primary/5' : ''
+                      index === 1 && gameState === 'playing' ? 'bg-gradient-to-br from-primary/20 to-primary/5' : ''
                     }`}
                   >
-                    {index === 1 && gameState === 'playing' && !isDealing ? (
+                    {index === 1 && gameState === 'playing' ? (
                       <div className="text-lg">🂠</div>
                     ) : (
                       <>
