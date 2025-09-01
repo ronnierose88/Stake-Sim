@@ -83,13 +83,14 @@ const Index = () => {
         </div>
         
         <div className="relative z-10 animate-slide-up">
-          <div className="flex justify-center mb-6">
+          {/* Remove the icon above the logo */}
+          {/* <div className="flex justify-center mb-6">
             <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow-primary animate-pulse-glow">
               <Coins className="w-10 h-10 text-primary-foreground" />
             </div>
-          </div>
+          </div> */}
           
-          {/* Replace branding text with logo */}
+          {/* Logo only */}
           <div className="flex justify-center mb-6">
             <img
               src={stakeLogo}
