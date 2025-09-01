@@ -9,6 +9,7 @@ import { Zap, AlertTriangle, Target } from 'lucide-react';
 
 type RiskLevel = 'low' | 'medium' | 'high';
 type GameState = 'idle' | 'dropping' | 'finished';
+type RowCount = 8 | 12 | 16 | 20;
 
 interface Ball {
   x: number;
@@ -18,14 +19,26 @@ interface Ball {
   id: number;
 }
 
-const ROWS = 12;
-const SLOTS = 13;
-
-// Payout multipliers for different risk levels
-const PAYOUTS: Record<RiskLevel, number[]> = {
-  low: [0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.8, 1.5, 1.3, 1.1, 0.9, 0.7, 0.5],
-  medium: [0.3, 0.5, 0.8, 1.2, 1.6, 2.1, 3.0, 2.1, 1.6, 1.2, 0.8, 0.5, 0.3],
-  high: [0.2, 0.3, 0.5, 1.0, 2.0, 4.0, 10.0, 4.0, 2.0, 1.0, 0.5, 0.3, 0.2]
+// Payout multipliers for different risk levels and row counts
+const PAYOUTS: Record<RiskLevel, Record<RowCount, number[]>> = {
+  low: {
+    8: [2, 1.5, 1.2, 1, 1, 1.2, 1.5, 2],
+    12: [3, 2, 1.5, 1.2, 1.1, 1, 1, 1.1, 1.2, 1.5, 2, 3],
+    16: [4, 3, 2, 1.5, 1.3, 1.2, 1.1, 1, 1, 1.1, 1.2, 1.3, 1.5, 2, 3, 4],
+    20: [5, 4, 3, 2, 1.5, 1.3, 1.2, 1.1, 1.05, 1, 1, 1.05, 1.1, 1.2, 1.3, 1.5, 2, 3, 4, 5]
+  },
+  medium: {
+    8: [10, 3, 1.5, 1, 1, 1.5, 3, 10],
+    12: [15, 7, 3, 2, 1.5, 1, 1, 1.5, 2, 3, 7, 15],
+    16: [20, 10, 5, 3, 2, 1.5, 1.2, 1, 1, 1.2, 1.5, 2, 3, 5, 10, 20],
+    20: [30, 15, 10, 7, 5, 3, 2, 1.5, 1.2, 1, 1, 1.2, 1.5, 2, 3, 5, 7, 10, 15, 30]
+  },
+  high: {
+    8: [50, 5, 2, 0.5, 0.5, 2, 5, 50],
+    12: [100, 25, 10, 3, 1, 0.5, 0.5, 1, 3, 10, 25, 100],
+    16: [250, 100, 50, 20, 7, 3, 1.5, 0.5, 0.5, 1.5, 3, 7, 20, 50, 100, 250],
+    20: [500, 250, 100, 50, 20, 10, 5, 2, 1, 0.5, 0.5, 1, 2, 5, 10, 20, 50, 100, 250, 500]
+  }
 };
 
 const RISK_COLORS: Record<RiskLevel, string> = {
@@ -34,10 +47,32 @@ const RISK_COLORS: Record<RiskLevel, string> = {
   high: 'text-red-400'
 };
 
+const RISK_DESCRIPTIONS: Record<RiskLevel, Record<RowCount, string>> = {
+  low: {
+    8: 'Low Risk (1x - 2x)',
+    12: 'Low Risk (1x - 3x)',
+    16: 'Low Risk (1x - 4x)',
+    20: 'Low Risk (1x - 5x)'
+  },
+  medium: {
+    8: 'Medium Risk (1x - 10x)',
+    12: 'Medium Risk (0.5x - 15x)',
+    16: 'Medium Risk (1x - 20x)',
+    20: 'Medium Risk (1x - 30x)'
+  },
+  high: {
+    8: 'High Risk (0.5x - 50x)',
+    12: 'High Risk (0.5x - 100x)',
+    16: 'High Risk (0.5x - 250x)',
+    20: 'High Risk (0.5x - 500x)'
+  }
+};
+
 export default function Plinko() {
   const { user, updateBalance, addBetHistory } = useUser();
   const [betAmount, setBetAmount] = useState(10);
   const [riskLevel, setRiskLevel] = useState<RiskLevel>('medium');
+  const [rowCount, setRowCount] = useState<RowCount>(12);
   const [gameState, setGameState] = useState<GameState>('idle');
   const [ball, setBall] = useState<Ball | null>(null);
   const [lastWin, setLastWin] = useState<{ slot: number; multiplier: number; amount: number } | null>(null);
@@ -46,13 +81,71 @@ export default function Plinko() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
 
-  const getSlotColor = (index: number, risk: RiskLevel): string => {
-    const multiplier = PAYOUTS[risk][index];
-    if (multiplier >= 4) return '#ef4444'; // red for high payouts
-    if (multiplier >= 2) return '#f59e0b'; // yellow for medium payouts
+  // Get current multipliers based on risk level and row count
+  const currentMultipliers = PAYOUTS[riskLevel][rowCount];
+  const slotCount = currentMultipliers.length;
+
+  const getSlotColor = (index: number): string => {
+    const multiplier = currentMultipliers[index];
+    if (multiplier >= 10) return '#ef4444'; // red for very high payouts
+    if (multiplier >= 3) return '#f59e0b'; // yellow for high payouts
     if (multiplier >= 1) return '#10b981'; // green for profit
     return '#6b7280'; // gray for loss
   };
+
+  const drawBoard = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+
+    const pegSpacingX = canvas.width / (rowCount + 1);
+    const pegSpacingY = (canvas.height - 100) / rowCount;
+    const pegRadius = 4;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw pegs
+    ctx.fillStyle = '#4b5563';
+    for (let row = 0; row < rowCount; row++) {
+      const pegsInRow = row + 2;
+      const startX = (canvas.width - (pegsInRow - 1) * pegSpacingX) / 2;
+      
+      for (let peg = 0; peg < pegsInRow; peg++) {
+        const pegX = startX + peg * pegSpacingX;
+        const pegY = 50 + row * pegSpacingY;
+        
+        ctx.beginPath();
+        ctx.arc(pegX, pegY, pegRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Draw slots at bottom
+    const slotWidth = canvas.width / slotCount;
+    for (let i = 0; i < slotCount; i++) {
+      const x = i * slotWidth;
+      const y = canvas.height - 50;
+      
+      ctx.fillStyle = getSlotColor(i);
+      ctx.fillRect(x, y, slotWidth - 2, 30);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      const multiplier = currentMultipliers[i];
+      ctx.fillText(
+        `${multiplier}x`,
+        x + slotWidth / 2,
+        y + 20
+      );
+    }
+  };
+
+  // Draw board whenever settings change
+  useEffect(() => {
+    drawBoard();
+  }, [riskLevel, rowCount]);
 
   const dropBall = () => {
     if (!user || gameState !== 'idle') return;
@@ -88,51 +181,16 @@ export default function Plinko() {
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
-    const pegSpacingX = canvas.width / (ROWS + 1);
-    const pegSpacingY = (canvas.height - 100) / ROWS;
+    const pegSpacingX = canvas.width / (rowCount + 1);
+    const pegSpacingY = (canvas.height - 100) / rowCount;
     const gravity = 0.3;
     const bounce = 0.7;
     const pegRadius = 4;
     const ballRadius = 6;
 
     const animate = () => {
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw pegs
-      ctx.fillStyle = '#4b5563';
-      for (let row = 0; row < ROWS; row++) {
-        const pegsInRow = row + 2;
-        const startX = (canvas.width - (pegsInRow - 1) * pegSpacingX) / 2;
-        
-        for (let peg = 0; peg < pegsInRow; peg++) {
-          const pegX = startX + peg * pegSpacingX;
-          const pegY = 50 + row * pegSpacingY;
-          
-          ctx.beginPath();
-          ctx.arc(pegX, pegY, pegRadius, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      // Draw slots at bottom
-      const slotWidth = canvas.width / SLOTS;
-      for (let i = 0; i < SLOTS; i++) {
-        const x = i * slotWidth;
-        const y = canvas.height - 50;
-        
-        ctx.fillStyle = getSlotColor(i, riskLevel);
-        ctx.fillRect(x, y, slotWidth - 2, 30);
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '10px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(
-          `${PAYOUTS[riskLevel][i]}x`,
-          x + slotWidth / 2,
-          y + 20
-        );
-      }
+      // Redraw board
+      drawBoard();
 
       // Update ball physics
       ballData.vy += gravity;
@@ -140,7 +198,7 @@ export default function Plinko() {
       ballData.y += ballData.vy;
 
       // Check collision with pegs
-      for (let row = 0; row < ROWS; row++) {
+      for (let row = 0; row < rowCount; row++) {
         const pegsInRow = row + 2;
         const startX = (canvas.width - (pegsInRow - 1) * pegSpacingX) / 2;
         
@@ -173,9 +231,10 @@ export default function Plinko() {
 
       // Check if ball reached bottom
       if (ballData.y > canvas.height - 60) {
+        const slotWidth = canvas.width / slotCount;
         const slotIndex = Math.floor(ballData.x / slotWidth);
-        const finalSlot = Math.max(0, Math.min(SLOTS - 1, slotIndex));
-        const multiplier = PAYOUTS[riskLevel][finalSlot];
+        const finalSlot = Math.max(0, Math.min(slotCount - 1, slotIndex));
+        const multiplier = currentMultipliers[finalSlot];
         const winAmount = betAmount * multiplier;
         
         // Update balance and history
@@ -264,7 +323,7 @@ export default function Plinko() {
           <Card className="bg-gradient-card border-border">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Plinko Board</span>
+                <span>Plinko Board ({rowCount} Rows)</span>
                 <div className="flex items-center gap-2">
                   <span className={`text-sm font-bold ${RISK_COLORS[riskLevel]}`}>
                     {riskLevel.toUpperCase()} RISK
@@ -315,15 +374,30 @@ export default function Plinko() {
               </div>
 
               <div>
+                <label className="text-sm font-medium mb-2 block">Rows</label>
+                <Select value={rowCount.toString()} onValueChange={(value) => setRowCount(Number(value) as RowCount)} disabled={gameState !== 'idle'}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="8">8 Rows</SelectItem>
+                    <SelectItem value="12">12 Rows</SelectItem>
+                    <SelectItem value="16">16 Rows</SelectItem>
+                    <SelectItem value="20">20 Rows</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
                 <label className="text-sm font-medium mb-2 block">Risk Level</label>
                 <Select value={riskLevel} onValueChange={(value: RiskLevel) => setRiskLevel(value)} disabled={gameState !== 'idle'}>
                   <SelectTrigger className="bg-background">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Low Risk (0.5x - 1.8x)</SelectItem>
-                    <SelectItem value="medium">Medium Risk (0.3x - 3.0x)</SelectItem>
-                    <SelectItem value="high">High Risk (0.2x - 10.0x)</SelectItem>
+                    <SelectItem value="low">{RISK_DESCRIPTIONS.low[rowCount]}</SelectItem>
+                    <SelectItem value="medium">{RISK_DESCRIPTIONS.medium[rowCount]}</SelectItem>
+                    <SelectItem value="high">{RISK_DESCRIPTIONS.high[rowCount]}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
