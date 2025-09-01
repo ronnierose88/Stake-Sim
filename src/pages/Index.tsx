@@ -62,9 +62,15 @@ const Index = () => {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div
+      className="container mx-auto px-4 py-8"
+      style={{ backgroundColor: '#132632', minHeight: '100vh' }}
+    >
       {/* Hero Section */}
-      <section className="relative text-center py-12 mb-12 overflow-hidden rounded-3xl">
+      <section
+        className="relative text-center py-12 mb-12 overflow-hidden rounded-3xl"
+        style={{ backgroundColor: '#132632' }}
+      >
         {/* Hero Background */}
         <div className="absolute inset-0 z-0">
           <img 
