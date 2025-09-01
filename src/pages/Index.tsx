@@ -5,6 +5,7 @@ import { useUser } from '@/contexts/UserContext';
 import { LoginDialog } from '@/components/LoginDialog';
 import { useState } from 'react';
 import casinoHero from '@/assets/casino-hero.jpg';
+import stakeLogo from '@/assets/stake-logo.png';
 import { 
   Gamepad2, 
   Dices, 
@@ -88,11 +89,15 @@ const Index = () => {
             </div>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
-              StakeSim
-            </span>
-          </h1>
+          {/* Replace branding text with logo */}
+          <div className="flex justify-center mb-6">
+            <img
+              src={stakeLogo}
+              alt="Stake Logo"
+              className="h-20 md:h-28"
+              style={{ maxWidth: '100%', objectFit: 'contain' }}
+            />
+          </div>
           
           <p className="text-xl md:text-2xl text-foreground mb-8 max-w-2xl mx-auto font-medium">
             Experience the thrill of casino gaming with virtual credits. 
