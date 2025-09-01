@@ -19,37 +19,54 @@ const Games = () => {
 
   const games = [
     {
-      name: 'Mines',
-      description: 'Navigate through a minefield. Find gems, avoid bombs. Cash out before it\'s too late!',
-      icon: Bomb,
+      id: 'mines',
+      title: 'Mines',
+      description: 'Find the safe tiles and avoid the bombs in this customizable grid game.',
+      difficulty: 'Medium',
+      payout: 'Up to 24.47x',
+      icon: '💣',
       path: '/games/mines',
-      color: 'text-casino-red',
-      bgColor: 'from-casino-red/20 to-casino-red/5',
-      difficulty: 'Medium',
-      maxPayout: '24.48x',
-      players: '1.2k'
+      color: 'from-red-500 to-orange-500'
     },
     {
-      name: 'Dice',
-      description: 'Simple and classic. Set your target, roll the dice, and win big with customizable odds.',
-      icon: Dices,
-      path: '/games/dice',
-      color: 'text-neon-blue',
-      bgColor: 'from-neon-blue/20 to-neon-blue/5',
+      id: 'dice',
+      title: 'Dice',
+      description: 'Roll the dice and predict the outcome. Simple yet exciting!',
       difficulty: 'Easy',
-      maxPayout: '98.99x',
-      players: '856'
+      payout: 'Up to 990x',
+      icon: '🎲',
+      path: '/games/dice',
+      color: 'from-blue-500 to-cyan-500'
     },
     {
-      name: 'Blackjack',
-      description: 'Classic card game. Get as close to 21 as possible. Double down and split for bigger wins!',
-      icon: Coins,
-      path: '/games/blackjack',
-      color: 'text-neon-green',
-      bgColor: 'from-neon-green/20 to-neon-green/5',
+      id: 'blackjack',
+      title: 'Blackjack',
+      description: 'Classic card game. Get as close to 21 as possible without going over.',
       difficulty: 'Medium',
-      maxPayout: '2.5x',
-      players: '2.1k'
+      payout: 'Up to 3:2',
+      icon: '🃏',
+      path: '/games/blackjack',
+      color: 'from-green-500 to-emerald-500'
+    },
+    {
+      id: 'crash',
+      title: 'Crash',
+      description: 'Watch the multiplier rise and cash out before it crashes!',
+      difficulty: 'High',
+      payout: 'Up to 50x',
+      icon: '⚡',
+      path: '/games/crash',
+      color: 'from-yellow-500 to-amber-500'
+    },
+    {
+      id: 'plinko',
+      title: 'Plinko',
+      description: 'Drop the ball and watch it bounce through pegs to win big!',
+      difficulty: 'Easy',
+      payout: 'Up to 10x',
+      icon: '🎯',
+      path: '/games/plinko',
+      color: 'from-purple-500 to-pink-500'
     }
   ];
 
@@ -80,57 +97,42 @@ const Games = () => {
       )}
 
       {/* Games Grid */}
-      <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {games.map((game, index) => (
           <Card 
-            key={game.name} 
-            className="bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon-green hover:scale-105 animate-slide-up"
-            style={{ animationDelay: `${index * 150}ms` }}
+            key={game.id} 
+            className="bg-gradient-card border-border hover:border-primary transition-all duration-300 group overflow-hidden"
           >
             <CardHeader className="pb-4">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${game.bgColor} flex items-center justify-center shadow-lg`}>
-                    <game.icon className={`w-8 h-8 ${game.color}`} />
-                  </div>
-                  <div>
-                    <CardTitle className="text-2xl mb-1">{game.name}</CardTitle>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>Difficulty: {game.difficulty}</span>
-                      <span className="flex items-center gap-1">
-                        <Users className="w-3 h-3" />
-                        {game.players} playing
-                      </span>
-                    </div>
-                  </div>
+              <div className="flex items-center justify-between mb-3">
+                <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${game.color} flex items-center justify-center text-2xl shadow-lg`}>
+                  {game.icon}
                 </div>
-                
                 <div className="text-right">
-                  <div className="text-sm text-muted-foreground">Max Payout</div>
-                  <div className="text-lg font-bold text-casino-gold flex items-center gap-1">
-                    <TrendingUp className="w-4 h-4" />
-                    {game.maxPayout}
-                  </div>
+                  <div className="text-xs text-muted-foreground">Max Payout</div>
+                  <div className="text-sm font-bold text-green-400">{game.payout}</div>
                 </div>
               </div>
               
-              <CardDescription className="text-base leading-relaxed">
+              <CardTitle className="text-xl mb-2">{game.title}</CardTitle>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                <span>Difficulty: {game.difficulty}</span>
+              </div>
+              <CardDescription className="text-sm">
                 {game.description}
               </CardDescription>
             </CardHeader>
             
-            <CardContent>
+            <CardContent className="pt-0">
               {user ? (
                 <Link to={game.path}>
-                  <Button variant="casino" size="lg" className="w-full shadow-glow-primary">
-                    <Zap className="w-5 h-5" />
-                    Play {game.name}
+                  <Button variant="casino" className="w-full group-hover:shadow-lg">
+                    Play Now
                   </Button>
                 </Link>
               ) : (
                 <Button 
                   variant="outline" 
-                  size="lg"
                   className="w-full"
                   onClick={() => setIsLoginOpen(true)}
                 >
@@ -144,18 +146,18 @@ const Games = () => {
 
       {/* Coming Soon Section */}
       <div className="text-center mt-16">
-        <h2 className="text-2xl font-bold mb-4 text-muted-foreground">
+        <h2 className="text-2xl font-bold mb-6 text-muted-foreground">
           More Games Coming Soon...
         </h2>
-        <div className="grid grid-cols-3 gap-4 max-w-md mx-auto opacity-50">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-md mx-auto opacity-50">
           <div className="bg-gradient-card border border-dashed border-border rounded-lg p-4">
-            <div className="text-sm">Roulette</div>
+            <div className="text-sm">🎰 Slots</div>
           </div>
           <div className="bg-gradient-card border border-dashed border-border rounded-lg p-4">
-            <div className="text-sm">Crash</div>
+            <div className="text-sm">🎡 Roulette</div>
           </div>
           <div className="bg-gradient-card border border-dashed border-border rounded-lg p-4">
-            <div className="text-sm">Slots</div>
+            <div className="text-sm">🎪 Baccarat</div>
           </div>
         </div>
       </div>

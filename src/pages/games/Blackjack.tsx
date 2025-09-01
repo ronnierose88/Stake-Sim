@@ -65,17 +65,30 @@ const Blackjack = () => {
       if (card.value === 'A') {
         aces++;
         value += 11;
+      } else if (['J', 'Q', 'K'].includes(card.value)) {
+        value += 10;
       } else {
-        value += card.numValue;
+        value += parseInt(card.value);
       }
     }
     
+    // Adjust for aces
     while (value > 21 && aces > 0) {
       value -= 10;
       aces--;
     }
     
     return value;
+  };
+
+  const calculateDealerVisibleValue = (hand: PlayingCard[]): number => {
+    if (hand.length === 0) return 0;
+    if (gameState === 'playing') {
+      // Only show value of first card during play
+      return calculateHandValue([hand[0]]);
+    }
+    // Show full value when game is over
+    return calculateHandValue(hand);
   };
 
   const startGame = () => {
@@ -444,7 +457,7 @@ const Blackjack = () => {
           {/* Dealer Hand */}
           <Card className="bg-gradient-card border-border">
             <CardHeader>
-              <CardTitle>Dealer's Hand {dealerHand.length > 0 && `(${gameState === 'playing' && !isDealing ? '?' : calculateHandValue(dealerHand)})`}</CardTitle>
+              <CardTitle>Dealer's Hand {dealerHand.length > 0 && `(${calculateDealerVisibleValue(dealerHand)})`}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex gap-2 flex-wrap">

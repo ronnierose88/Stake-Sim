@@ -1,350 +1,367 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { useUser } from '@/contexts/UserContext';
-import { LoginDialog } from '@/components/LoginDialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { 
-  Bomb, 
-  Gem, 
-  ArrowLeft, 
-  DollarSign,
-  Target,
-  Zap
-} from 'lucide-react';
+import { Bomb, DollarSign, AlertTriangle, RotateCcw } from 'lucide-react';
 
-const Mines = () => {
+type GameState = 'setup' | 'playing' | 'ended';
+type Cell = { revealed: boolean; isBomb: boolean; hasMoney: boolean };
+
+export default function Mines() {
   const { user, updateBalance, addBetHistory } = useUser();
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [gameState, setGameState] = useState<'setup' | 'playing' | 'ended'>('setup');
   const [betAmount, setBetAmount] = useState(10);
-  const [mineCount, setMineCount] = useState(3);
-  const [grid, setGrid] = useState<Array<'hidden' | 'safe' | 'bomb'>>(Array(25).fill('hidden'));
-  const [minePositions, setMinePositions] = useState<number[]>([]);
-  const [revealedCount, setRevealedCount] = useState(0);
-  const [currentMultiplier, setCurrentMultiplier] = useState(1);
-  const [potentialWin, setPotentialWin] = useState(0);
-
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-casino-red/20 to-casino-red/5 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Bomb className="w-10 h-10 text-casino-red" />
-          </div>
-          <h1 className="text-4xl font-bold mb-4">Mines</h1>
-          <p className="text-lg text-muted-foreground mb-8">
-            Login to start playing this thrilling game of risk and reward
-          </p>
-          <Button variant="casino" onClick={() => setIsLoginOpen(true)}>
-            Login to Play
-          </Button>
-        </div>
-        
-        <LoginDialog 
-          open={isLoginOpen} 
-          onOpenChange={setIsLoginOpen} 
-        />
-      </div>
-    );
-  }
-
-  const calculateMultiplier = (revealed: number, mines: number) => {
-    const safeSpaces = 25 - mines;
-    if (revealed === 0) return 1;
-    
-    // Calculate multiplier based on revealed safe spaces
-    let multiplier = 1;
-    for (let i = 1; i <= revealed; i++) {
-      multiplier *= (safeSpaces - i + 1) / (25 - i + 1);
-    }
-    return 1 / multiplier;
-  };
+  const [bombCount, setBombCount] = useState(3);
+  const [boardSize, setBoardSize] = useState(5);
+  const [gameState, setGameState] = useState<GameState>('setup');
+  const [board, setBoard] = useState<Cell[][]>([]);
+  const [currentWinnings, setCurrentWinnings] = useState(0);
 
   const startGame = () => {
-    if (betAmount > user.balance) {
-      toast.error('Insufficient balance!');
+    if (!user || betAmount <= 0 || betAmount > user.balance) {
+      toast.error('Invalid bet amount');
       return;
     }
-    
-    if (betAmount < 1) {
-      toast.error('Minimum bet is $1');
+
+    const totalTiles = boardSize * boardSize;
+    if (bombCount >= totalTiles) {
+      toast.error('Too many bombs for board size');
       return;
     }
 
     // Deduct bet amount
     updateBalance(-betAmount);
     
-    // Generate mine positions
-    const positions = [];
-    while (positions.length < mineCount) {
-      const pos = Math.floor(Math.random() * 25);
-      if (!positions.includes(pos)) {
-        positions.push(pos);
+    // Create new board
+    const newBoard: Cell[][] = [];
+    for (let i = 0; i < boardSize; i++) {
+      const row: Cell[] = [];
+      for (let j = 0; j < boardSize; j++) {
+        row.push({ revealed: false, isBomb: false, hasMoney: false });
+      }
+      newBoard.push(row);
+    }
+
+    // Randomly place bombs
+    const bombPositions = new Set<string>();
+    while (bombPositions.size < bombCount) {
+      const row = Math.floor(Math.random() * boardSize);
+      const col = Math.floor(Math.random() * boardSize);
+      bombPositions.add(`${row}-${col}`);
+    }
+
+    // Set bombs on board
+    bombPositions.forEach(pos => {
+      const [row, col] = pos.split('-').map(Number);
+      newBoard[row][col].isBomb = true;
+    });
+
+    // Set money on safe tiles
+    for (let i = 0; i < boardSize; i++) {
+      for (let j = 0; j < boardSize; j++) {
+        if (!newBoard[i][j].isBomb) {
+          newBoard[i][j].hasMoney = true;
+        }
       }
     }
-    
-    setMinePositions(positions);
-    setGrid(Array(25).fill('hidden'));
-    setRevealedCount(0);
-    setCurrentMultiplier(1);
-    setPotentialWin(betAmount);
+
+    setBoard(newBoard);
     setGameState('playing');
-    
-    toast.success(`Game started! Find gems and avoid ${mineCount} bombs.`);
+    setCurrentWinnings(0);
+
+    toast.success(`Game started! Find the safe tiles and avoid ${bombCount} bombs.`);
   };
 
-  const revealTile = (index: number) => {
-    if (gameState !== 'playing' || grid[index] !== 'hidden') return;
-    
-    const newGrid = [...grid];
-    
-    if (minePositions.includes(index)) {
-      // Hit a mine - game over
-      newGrid[index] = 'bomb';
-      setGrid(newGrid);
+  const revealTile = (row: number, col: number) => {
+    if (gameState !== 'playing' || board[row][col].revealed) return;
+
+    const newBoard = [...board];
+    newBoard[row][col].revealed = true;
+
+    if (newBoard[row][col].isBomb) {
+      // Hit a bomb - game over
+      setBoard(newBoard);
       setGameState('ended');
-      
-      // Show all mines
+
+      // Reveal all bombs
       setTimeout(() => {
-        const finalGrid = [...newGrid];
-        minePositions.forEach(pos => {
-          if (pos !== index) {
-            finalGrid[pos] = 'bomb';
+        const revealedBoard = [...newBoard];
+        for (let i = 0; i < boardSize; i++) {
+          for (let j = 0; j < boardSize; j++) {
+            if (revealedBoard[i][j].isBomb) {
+              revealedBoard[i][j].revealed = true;
+            }
           }
-        });
-        setGrid(finalGrid);
+        }
+        setBoard(revealedBoard);
       }, 500);
-      
+
       addBetHistory({
         game: 'Mines',
         betAmount,
         result: 'loss',
         payout: 0
       });
-      
-      toast.error('💥 You hit a mine! Better luck next time.');
-    } else {
-      // Safe tile
-      newGrid[index] = 'safe';
-      setGrid(newGrid);
-      
-      const newRevealed = revealedCount + 1;
-      setRevealedCount(newRevealed);
-      
-      const newMultiplier = calculateMultiplier(newRevealed, mineCount);
-      setCurrentMultiplier(newMultiplier);
-      setPotentialWin(betAmount * newMultiplier);
-      
-      toast.success('💎 Safe! Keep going or cash out.');
+
+      toast.error('💣 You hit a bomb! Game over.');
+      return;
     }
+
+    // Safe tile revealed
+    setBoard(newBoard);
+
+    // Calculate current winnings
+    const revealedSafeTiles = newBoard.flat().filter(cell => cell.revealed && !cell.isBomb).length;
+    const multiplier = calculateMultiplier(revealedSafeTiles);
+    const winnings = betAmount * multiplier;
+    setCurrentWinnings(winnings);
+
+    toast.success(`💎 Safe! Current winnings: $${winnings.toFixed(2)}`);
+  };
+
+  const calculateMultiplier = (revealedSafeTiles: number): number => {
+    if (revealedSafeTiles === 0) return 1;
+    const totalTiles = boardSize * boardSize;
+    const safeTiles = totalTiles - bombCount;
+    const baseMultiplier = 1.2;
+    return Math.pow(baseMultiplier, revealedSafeTiles) * (bombCount / 5);
   };
 
   const cashOut = () => {
-    if (gameState !== 'playing' || revealedCount === 0) return;
-    
-    const winAmount = betAmount * currentMultiplier;
-    updateBalance(winAmount);
-    
+    if (gameState !== 'playing' || currentWinnings <= 0) return;
+
+    updateBalance(currentWinnings);
     addBetHistory({
       game: 'Mines',
       betAmount,
       result: 'win',
-      payout: winAmount
+      payout: currentWinnings
     });
-    
+
     setGameState('ended');
-    toast.success(`🎉 Cashed out for $${winAmount.toFixed(2)}!`);
+    toast.success(`💰 Cashed out for $${currentWinnings.toFixed(2)}!`);
   };
 
   const resetGame = () => {
+    setBoard([]);
     setGameState('setup');
-    setGrid(Array(25).fill('hidden'));
-    setMinePositions([]);
-    setRevealedCount(0);
-    setCurrentMultiplier(1);
-    setPotentialWin(0);
+    setCurrentWinnings(0);
   };
 
+  const maxBombs = Math.floor((boardSize * boardSize) * 0.8); // Max 80% of tiles can be bombs
+
+  if (!user) {
+    return (
+      <div className="container mx-auto p-6 text-center">
+        <Card className="bg-gradient-card border-border max-w-md mx-auto">
+          <CardContent className="p-6">
+            <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Login Required</h2>
+            <p className="text-muted-foreground">Please login to play Mines</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Header */}
+    <div className="container mx-auto p-6 max-w-6xl">
       <div className="text-center mb-8">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-casino-red/20 to-casino-red/5 rounded-lg flex items-center justify-center">
-            <Bomb className="w-6 h-6 text-casino-red" />
-          </div>
-          <h1 className="text-4xl font-bold">Mines</h1>
-        </div>
-        <p className="text-lg text-muted-foreground">
+        <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
+          <Bomb className="w-8 h-8 inline mr-2" />
+          Mines
+        </h1>
+        <p className="text-muted-foreground">
           Navigate the minefield. Find gems, avoid bombs, cash out anytime!
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Game Controls */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Balance */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Controls */}
+        <div className="space-y-6">
           <Card className="bg-gradient-card border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-casino-gold" />
-                Balance
-              </CardTitle>
+            <CardHeader>
+              <CardTitle>Game Controls</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">
-                ${user.balance.toFixed(2)}
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Bet Amount</label>
+                <Input
+                  type="number"
+                  min="1"
+                  max={user.balance}
+                  value={betAmount}
+                  onChange={(e) => setBetAmount(Number(e.target.value))}
+                  disabled={gameState !== 'setup'}
+                  className="bg-background"
+                />
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Bet Setup */}
-          {gameState === 'setup' && (
-            <Card className="bg-gradient-card border-border">
-              <CardHeader>
-                <CardTitle>Game Setup</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Bet Amount</label>
-                  <Input
-                    type="number"
-                    value={betAmount}
-                    onChange={(e) => setBetAmount(Math.max(1, parseFloat(e.target.value) || 1))}
-                    min={1}
-                    max={user.balance}
-                    step={0.01}
-                    className="bg-secondary"
-                  />
+              <div>
+                <label className="text-sm font-medium mb-2 block">Board Size</label>
+                <Select value={boardSize.toString()} onValueChange={(value) => setBoardSize(Number(value))} disabled={gameState !== 'setup'}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3×3 Grid</SelectItem>
+                    <SelectItem value="4">4×4 Grid</SelectItem>
+                    <SelectItem value="5">5×5 Grid</SelectItem>
+                    <SelectItem value="6">6×6 Grid</SelectItem>
+                    <SelectItem value="7">7×7 Grid</SelectItem>
+                    <SelectItem value="8">8×8 Grid</SelectItem>
+                    <SelectItem value="10">10×10 Grid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Number of Bombs</label>
+                <Input
+                  type="number"
+                  min="1"
+                  max={maxBombs}
+                  value={bombCount}
+                  onChange={(e) => setBombCount(Math.min(maxBombs, Number(e.target.value)))}
+                  disabled={gameState !== 'setup'}
+                  className="bg-background"
+                />
+                <div className="text-xs text-muted-foreground mt-1">
+                  Max: {maxBombs} bombs ({boardSize}×{boardSize} grid)
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Mines ({mineCount})
-                  </label>
-                  <div className="flex gap-2 flex-wrap">
-                    {[1, 2, 3, 5, 10, 15, 20].map(count => (
-                      <Button
-                        key={count}
-                        variant={mineCount === count ? "casino" : "outline"}
-                        size="sm"
-                        onClick={() => setMineCount(count)}
-                      >
-                        {count}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBetAmount(Math.floor(betAmount / 2))}
+                  disabled={gameState !== 'setup'}
+                >
+                  1/2
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBetAmount(Math.min(user.balance, betAmount * 2))}
+                  disabled={gameState !== 'setup'}
+                >
+                  2x
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBetAmount(user.balance)}
+                  disabled={gameState !== 'setup'}
+                >
+                  Max
+                </Button>
+              </div>
+
+              {gameState === 'setup' && (
                 <Button 
                   variant="casino" 
                   className="w-full" 
                   onClick={startGame}
-                  disabled={betAmount > user.balance}
+                  disabled={betAmount <= 0 || betAmount > user.balance}
                 >
-                  <Target className="w-4 h-4" />
-                  Start Game - ${betAmount.toFixed(2)}
+                  Start Game
                 </Button>
-              </CardContent>
-            </Card>
-          )}
+              )}
 
-          {/* Game Stats */}
-          {gameState !== 'setup' && (
-            <Card className="bg-gradient-card border-border">
-              <CardHeader>
-                <CardTitle>Current Game</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Bet Amount:</span>
-                    <span className="font-medium">${betAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Revealed:</span>
-                    <span className="font-medium">{revealedCount}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Multiplier:</span>
-                    <span className="font-medium text-casino-gold">
-                      {currentMultiplier.toFixed(2)}x
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Potential Win:</span>
-                    <span className="text-success">${potentialWin.toFixed(2)}</span>
-                  </div>
+              {gameState === 'playing' && currentWinnings > 0 && (
+                <Button 
+                  variant="default" 
+                  className="w-full bg-green-600 hover:bg-green-700" 
+                  onClick={cashOut}
+                >
+                  Cash Out ${currentWinnings.toFixed(2)}
+                </Button>
+              )}
+
+              {gameState === 'ended' && (
+                <Button 
+                  variant="casino" 
+                  className="w-full" 
+                  onClick={resetGame}
+                >
+                  <RotateCcw className="w-5 h-5" />
+                  New Game
+                </Button>
+              )}
+
+              <div className="text-center p-3 bg-gradient-accent rounded-lg">
+                <div className="text-sm text-muted-foreground">Current Bet</div>
+                <div className="text-lg font-bold">${betAmount.toFixed(2)}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {boardSize}×{boardSize} • {bombCount} bombs
                 </div>
-                
-                {gameState === 'playing' && revealedCount > 0 && (
-                  <Button 
-                    variant="success" 
-                    className="w-full"
-                    onClick={cashOut}
-                  >
-                    <Zap className="w-4 h-4" />
-                    Cash Out ${potentialWin.toFixed(2)}
-                  </Button>
-                )}
-                
-                {gameState === 'ended' && (
-                  <Button 
-                    variant="casino" 
-                    className="w-full"
-                    onClick={resetGame}
-                  >
-                    Play Again
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          )}
+              </div>
 
-          <Button variant="outline" className="w-full" onClick={() => window.history.back()}>
-            <ArrowLeft className="w-4 h-4" />
-            Back to Games
-          </Button>
+              <div className="text-center p-3 bg-gradient-accent rounded-lg">
+                <div className="text-sm text-muted-foreground">Balance</div>
+                <div className="text-lg font-bold">${user.balance.toFixed(2)}</div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Game Grid */}
+        {/* Game Board */}
         <div className="lg:col-span-2">
           <Card className="bg-gradient-card border-border">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-5 gap-2 max-w-lg mx-auto">
-                {grid.map((tile, index) => (
-                  <button
-                    key={index}
-                    className={`
-                      aspect-square rounded-lg border-2 transition-all duration-200 flex items-center justify-center text-2xl
-                      ${tile === 'hidden' 
-                        ? 'border-border bg-secondary hover:border-primary hover:bg-secondary/80 cursor-pointer' 
-                        : tile === 'safe'
-                        ? 'border-success bg-success/20 text-success cursor-default'
-                        : 'border-casino-red bg-casino-red/20 text-casino-red cursor-default animate-shake'
-                      }
-                      ${gameState !== 'playing' && tile === 'hidden' ? 'cursor-not-allowed opacity-50' : ''}
-                    `}
-                    onClick={() => revealTile(index)}
-                    disabled={gameState !== 'playing' || tile !== 'hidden'}
-                  >
-                    {tile === 'safe' && <Gem />}
-                    {tile === 'bomb' && <Bomb />}
-                  </button>
-                ))}
+            <CardHeader>
+              <CardTitle>
+                {gameState === 'setup' && 'Setup Your Game'}
+                {gameState === 'playing' && `Find the Safe Tiles! (${bombCount} bombs hidden)`}
+                {gameState === 'ended' && 'Game Over'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div 
+                className="grid gap-2 p-4" 
+                style={{ gridTemplateColumns: `repeat(${boardSize}, minmax(0, 1fr))` }}
+              >
+                {board.map((row, rowIndex) =>
+                  row.map((cell, colIndex) => (
+                    <button
+                      key={`${rowIndex}-${colIndex}`}
+                      className={`
+                        aspect-square rounded-lg border-2 transition-all duration-200 flex items-center justify-center text-xl
+                        ${!cell.revealed 
+                          ? 'border-border bg-secondary hover:border-primary hover:bg-secondary/80 cursor-pointer' 
+                          : cell.isBomb
+                          ? 'border-red-500 bg-red-500/20 text-red-500 cursor-default'
+                          : 'border-green-500 bg-green-500/20 text-green-500 cursor-default'
+                        }
+                        ${gameState !== 'playing' && !cell.revealed ? 'cursor-not-allowed opacity-50' : ''}
+                      `}
+                      onClick={() => revealTile(rowIndex, colIndex)}
+                      disabled={gameState !== 'playing' || cell.revealed}
+                    >
+                      {cell.revealed && cell.isBomb && <Bomb className="w-6 h-6" />}
+                      {cell.revealed && cell.hasMoney && <DollarSign className="w-6 h-6" />}
+                    </button>
+                  ))
+                )}
               </div>
-              
+
               {gameState === 'setup' && (
-                <div className="text-center mt-6 text-muted-foreground">
-                  Set your bet and mine count, then start the game!
+                <div className="text-center mt-4 text-muted-foreground">
+                  Configure your game settings and click "Start Game" to begin
                 </div>
               )}
-              
+
               {gameState === 'playing' && (
-                <div className="text-center mt-6 text-muted-foreground">
-                  Click tiles to reveal gems. Avoid the {mineCount} hidden mines!
+                <div className="text-center mt-4">
+                  <div className="text-lg font-semibold">
+                    Current Winnings: 
+                    <span className="text-green-400 ml-2">${currentWinnings.toFixed(2)}</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-2">
+                    Click tiles to reveal them. Cash out anytime to secure your winnings!
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -353,6 +370,4 @@ const Mines = () => {
       </div>
     </div>
   );
-};
-
-export default Mines;
+}
