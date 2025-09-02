@@ -30,50 +30,6 @@ const Dice = () => {
   const [mode, setMode] = useState<Mode>('under');
   const [dicePos, setDicePos] = useState<number | null>(null); // null means not shown
 
-  // Reset dice animation on mode/target change
-  useEffect(() => {
-    if (!isRolling) setDicePos(rollTarget);
-    // eslint-disable-next-line
-  }, [rollTarget, isRolling]);
-
-  // When user changes target, do not move dice icon (dicePos) unless not rolled yet
-  useEffect(() => {
-    if (!isRolling && lastRoll === null) setDicePos(null);
-    // eslint-disable-next-line
-  }, [rollTarget, isRolling]);
-
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen bg-[#132632]">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-neon-blue/20 to-neon-blue/5 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Dices className="w-10 h-10 text-neon-blue" />
-          </div>
-          <h1 className="text-4xl font-bold mb-4">Dice</h1>
-          <p className="text-lg text-muted-foreground mb-8">
-            Login to start rolling the dice and winning big!
-          </p>
-          <Button variant="casino" onClick={() => setIsLoginOpen(true)}>
-            Login to Play
-          </Button>
-        </div>
-        <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
-      </div>
-    );
-  }
-
-  // Calculate win chance and payout multiplier
-  const winChance =
-    mode === 'under'
-      ? rollTarget - 1
-      : 100 - rollTarget;
-  const payoutMultiplier = winChance > 0 ? (100 / winChance) * 0.98 : 0; // 2% house edge
-  const potentialWin = betAmount * payoutMultiplier;
-
-  // Calculate dice position as a percentage for slider track
-  const getPercent = (val: number) =>
-    ((val - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100;
-
   // Animate dice to stop at result
   const animateDiceTo = (final: number, cb: () => void) => {
     // Animate dice to the rolled number (single smooth animation)
@@ -154,7 +110,7 @@ const Dice = () => {
   const resetGame = () => {
     setLastRoll(null);
     setLastResult(null);
-    setDicePos(null);
+    // Do not reset dicePos here, so it stays at last rolled position
   };
 
   // --- UI ---
