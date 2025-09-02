@@ -16,33 +16,58 @@ import {
   Wallet,
   Users,
   Sparkles,
-  Zap
+  Zap,
+  Landmark,
+  ArrowUpRight,
+  Layers
 } from 'lucide-react';
+
+const stakeOriginals = [
+  {
+    name: 'Blackjack',
+    description: 'Beat the dealer in this classic card game.',
+    icon: Landmark,
+    path: '/games/blackjack',
+    color: 'text-casino-gold',
+    bgColor: 'from-casino-gold/20 to-casino-gold/5'
+  },
+  {
+    name: 'Crash',
+    description: 'Cash out before the multiplier crashes!',
+    icon: TrendingUp,
+    path: '/games/crash',
+    color: 'text-neon-pink',
+    bgColor: 'from-neon-pink/20 to-neon-pink/5'
+  },
+  {
+    name: 'Dice',
+    description: 'Roll the dice and predict the outcome.',
+    icon: Dices,
+    path: '/games/dice',
+    color: 'text-neon-blue',
+    bgColor: 'from-neon-blue/20 to-neon-blue/5'
+  },
+  {
+    name: 'Mines',
+    description: 'Navigate through a minefield to multiply your winnings.',
+    icon: Bomb,
+    path: '/games/mines',
+    color: 'text-casino-red',
+    bgColor: 'from-casino-red/20 to-casino-red/5'
+  },
+  {
+    name: 'Plinko',
+    description: 'Drop the ball and win big prizes!',
+    icon: Layers,
+    path: '/games/plinko',
+    color: 'text-casino-green',
+    bgColor: 'from-casino-green/20 to-casino-green/5'
+  }
+];
 
 const Index = () => {
   const { user } = useUser();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-
-  const games = [
-    {
-      name: 'Mines',
-      description: 'Navigate through a minefield to multiply your winnings',
-      icon: Bomb,
-      path: '/games/mines',
-      color: 'text-casino-red',
-      bgColor: 'from-casino-red/20 to-casino-red/5',
-      difficulty: 'Medium'
-    },
-    {
-      name: 'Dice',
-      description: 'Roll the dice and predict the outcome',
-      icon: Dices,
-      path: '/games/dice',
-      color: 'text-neon-blue',
-      bgColor: 'from-neon-blue/20 to-neon-blue/5',
-      difficulty: 'Easy'
-    }
-  ];
 
   const features = [
     {
@@ -67,127 +92,42 @@ const Index = () => {
       className="container mx-auto px-4 py-8"
       style={{ backgroundColor: '#132632', minHeight: '100vh' }}
     >
-      {/* Hero Section */}
-      <section
-        className="relative text-center py-12 mb-12 overflow-hidden rounded-3xl"
-        style={{ backgroundColor: '#132632' }}
-      >
-        {/* Hero Background */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src={casinoHero} 
-            alt="Casino Hero Background"
-            className="w-full h-full object-cover opacity-30"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
-        </div>
-        
-        <div className="relative z-10 animate-slide-up">
-          {/* Remove the icon above the logo */}
-          {/* <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow-primary animate-pulse-glow">
-              <Coins className="w-10 h-10 text-primary-foreground" />
-            </div>
-          </div> */}
-          
-          {/* Logo only */}
-          <div className="flex justify-center mb-6">
-            <img
-              src={stakeLogo}
-              alt="Stake Logo"
-              className="h-20 md:h-28"
-              style={{ maxWidth: '100%', objectFit: 'contain' }}
-            />
-          </div>
-          
-          <p className="text-xl md:text-2xl text-foreground mb-8 max-w-2xl mx-auto font-medium">
-            Experience the thrill of casino gaming with virtual credits. 
-            <br />
-            <span className="text-muted-foreground">No risk, all the excitement!</span>
-          </p>
-          
-          {user ? (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <div className="bg-gradient-accent rounded-lg px-6 py-3 shadow-neon-blue">
-                <div className="text-lg font-semibold text-accent-foreground">
-                  Balance: ${user.balance.toFixed(2)}
-                </div>
-              </div>
-              <Link to="/games">
-                <Button variant="casino" size="xl" className="animate-pulse-glow">
-                  <Gamepad2 className="w-5 h-5" />
-                  Start Playing
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <Button 
-              variant="casino" 
-              size="xl" 
-              onClick={() => setIsLoginOpen(true)}
-              className="animate-pulse-glow"
-            >
-              <Sparkles className="w-5 h-5" />
-              Get Started
-            </Button>
-          )}
-        </div>
-      </section>
-
-      {/* Games Preview */}
+      {/* Stake Originals Slider */}
       <section className="mb-16">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Available Games
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Choose your favorite game and start winning!
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold">Stake Originals</h2>
         </div>
-
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {games.map((game, index) => (
-            <Card 
-              key={game.name} 
-              className="bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon-green hover:scale-105 animate-slide-up group"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${game.bgColor} flex items-center justify-center`}>
-                    <game.icon className={`w-6 h-6 ${game.color}`} />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl">{game.name}</CardTitle>
-                    <div className="text-sm text-muted-foreground">
-                      {game.difficulty}
+        <div className="overflow-x-auto">
+          <div className="flex gap-6 pb-2" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {stakeOriginals.map((game, idx) => (
+              <Link
+                to={game.path}
+                key={game.name}
+                className="min-w-[260px] max-w-xs flex-shrink-0 group"
+                style={{ animationDelay: `${idx * 100}ms` }}
+              >
+                <Card className="bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon-green hover:scale-105 animate-slide-up group h-full">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${game.bgColor} flex items-center justify-center`}>
+                        <game.icon className={`w-6 h-6 ${game.color}`} />
+                      </div>
+                      <CardTitle className="text-xl">{game.name}</CardTitle>
                     </div>
-                  </div>
-                </div>
-                <CardDescription className="text-base">
-                  {game.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {user ? (
-                  <Link to={game.path}>
+                    <CardDescription className="text-base">
+                      {game.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
                     <Button variant="game" className="w-full group-hover:shadow-neon-green">
-                      <Zap className="w-4 h-4" />
-                      Play Now
+                      <ArrowUpRight className="w-4 h-4" />
+                      Play
                     </Button>
-                  </Link>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => setIsLoginOpen(true)}
-                  >
-                    Login to Play
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
