@@ -282,25 +282,32 @@ const CrossyRoad = () => {
               </div>
               {/* Infinite Game Lanes */}
               <div className="relative bg-gray-800 rounded-lg p-8 h-40 flex items-center justify-between">
+                {/* Dotted lane lines between circles */}
                 {visibleLanes.map((lane, idx) => (
-                  <div key={lane.index} className="relative flex flex-col items-center justify-center w-1/6">
-                    {/* Money Circle */}
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${idx === 0 ? 'bg-green-500' : 'bg-gray-700'} transition-all duration-300`}>
-                      <span className="text-white font-bold text-lg">${lane.amount.toFixed(2)}</span>
+                  <React.Fragment key={lane.index}>
+                    <div className="relative flex flex-col items-center justify-center w-1/6">
+                      {/* Money Circle */}
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${idx === 0 ? 'bg-green-500' : 'bg-gray-700'} transition-all duration-300`}>
+                        <span className="text-white font-bold text-lg">${lane.amount.toFixed(2)}</span>
+                      </div>
+                      {/* Chicken */}
+                      {idx === 0 && (
+                        <div className="absolute top-16 left-1/2 -translate-x-1/2 text-3xl transition-all duration-300">
+                          {isHit ? '💥🐔' : '🐔'}
+                        </div>
+                      )}
+                      {/* Car animation only if hit and chicken is in this lane */}
+                      {isHit && idx === 0 && (
+                        <div className="absolute left-1/2 -translate-x-1/2 top-0 text-3xl animate-[car-down_0.7s_linear]">
+                          🚗
+                        </div>
+                      )}
                     </div>
-                    {/* Chicken */}
-                    {idx === 0 && (
-                      <div className="absolute top-16 left-1/2 -translate-x-1/2 text-3xl transition-all duration-300">
-                        {isHit ? '💥🐔' : '🐔'}
-                      </div>
+                    {/* Dotted line between circles, except after last */}
+                    {idx < visibleLanes.length - 1 && (
+                      <div className="h-20 w-0 border-r-2 border-dotted border-white opacity-60 mx-auto" />
                     )}
-                    {/* Car animation only if hit and chicken is in this lane */}
-                    {isHit && idx === 0 && (
-                      <div className="absolute top-16 left-0 text-3xl animate-[car-sweep_0.7s_linear]">
-                        🚗
-                      </div>
-                    )}
-                  </div>
+                  </React.Fragment>
                 ))}
               </div>
               {/* Controls */}
@@ -334,13 +341,13 @@ const CrossyRoad = () => {
               )}
             </CardContent>
           </Card>
-          {/* Add car sweep animation keyframes */}
+          {/* Add car down animation keyframes */}
           <style>
             {`
-              @keyframes car-sweep {
-                0% { left: 0; opacity: 0; }
+              @keyframes car-down {
+                0% { top: 0; opacity: 0; }
                 20% { opacity: 1; }
-                100% { left: 80px; opacity: 1; }
+                100% { top: 64px; opacity: 1; }
               }
             `}
           </style>
