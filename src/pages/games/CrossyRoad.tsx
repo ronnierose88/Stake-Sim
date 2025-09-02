@@ -258,7 +258,6 @@ const CrossyRoad = () => {
                 <div className="space-y-2 text-sm">
                   <div>Compounding multiplier: ×{riskConfig.r.toFixed(2)} per hop</div>
                   <div>Survival chance per hop: {(riskConfig.p * 100).toFixed(2)}%</div>
-                  <div>House edge per hop: {(100 - RTP_TARGET * 100).toFixed(2)}%</div>
                 </div>
               </div>
             </CardContent>
@@ -330,14 +329,6 @@ const CrossyRoad = () => {
                         Cash Out (${potentialWinnings.toFixed(2)})
                       </Button>
                     )}
-                    <div className="text-center text-xs md:text-sm text-muted-foreground mt-2 md:mt-0 md:ml-4">
-                      <div>
-                        Next hop: ×{riskConfig.r.toFixed(2)} multiplier, { (riskConfig.p * 100).toFixed(2) }% survival
-                      </div>
-                      <div>
-                        If you survive: ${ (potentialWinnings * riskConfig.r).toFixed(2) }
-                      </div>
-                    </div>
                   </>
                 )}
                 {gameState === 'ended' && (
