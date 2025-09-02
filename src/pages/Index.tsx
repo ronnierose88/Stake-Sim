@@ -106,24 +106,27 @@ const Index = () => {
                 className="min-w-[260px] max-w-xs flex-shrink-0 group"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
-                <Card className="bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon-green hover:scale-105 animate-slide-up group h-full">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${game.bgColor} flex items-center justify-center`}>
-                        <game.icon className={`w-6 h-6 ${game.color}`} />
-                      </div>
-                      <CardTitle className="text-xl">{game.name}</CardTitle>
+                <Card className="relative bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon-green hover:scale-105 animate-slide-up group h-full overflow-hidden flex flex-col items-center justify-end min-h-[260px]">
+                  {/* Large faded icon as background */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <game.icon
+                      className={`w-32 h-32 opacity-10 ${game.color}`}
+                      style={{ filter: 'blur(0.5px)' }}
+                    />
+                  </div>
+                  {/* Overlayed game name */}
+                  <div className="relative z-10 flex flex-col items-center w-full px-4 pt-8 pb-4">
+                    <div className="text-2xl font-bold text-center drop-shadow-md mb-2 text-foreground">
+                      {game.name}
                     </div>
-                    <CardDescription className="text-base">
+                    <CardDescription className="text-base text-center text-muted-foreground mb-4">
                       {game.description}
                     </CardDescription>
-                  </CardHeader>
-                  <CardContent>
                     <Button variant="game" className="w-full group-hover:shadow-neon-green">
                       <ArrowUpRight className="w-4 h-4" />
                       Play
                     </Button>
-                  </CardContent>
+                  </div>
                 </Card>
               </Link>
             ))}
