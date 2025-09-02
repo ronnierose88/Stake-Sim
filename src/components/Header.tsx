@@ -39,41 +39,43 @@ export const Header = () => {
               />
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`px-4 py-2 rounded-lg transition-all duration-200 ${
-                    isActive(item.path)
-                      ? 'bg-primary text-primary-foreground shadow-neon-green'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Balance & Account */}
-            <div className="hidden md:flex items-center gap-4">
+            {/* Center Balance & Account */}
+            <div className="flex-1 flex justify-center">
               {user ? (
-                <>
+                <div className="flex items-center gap-4">
                   <div className="bg-gradient-accent rounded-lg px-4 py-2 shadow-neon-blue">
                     <div className="text-sm text-accent-foreground font-medium">
                       ${user.balance.toFixed(2)}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      {user.username}
-                    </span>
-                    <Button variant="outline" size="sm" onClick={logout}>
-                      Logout
-                    </Button>
-                  </div>
-                </>
+                  <span className="text-sm text-muted-foreground">
+                    {user.username}
+                  </span>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Desktop Navigation & Login/Logout on right */}
+            <div className="flex items-center gap-4">
+              <nav className="hidden md:flex items-center gap-6">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                      isActive(item.path)
+                        ? 'bg-primary text-primary-foreground shadow-neon-green'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </nav>
+              {user ? (
+                <Button variant="outline" size="sm" onClick={logout}>
+                  Logout
+                </Button>
               ) : (
                 <Button 
                   variant="casino" 
@@ -83,17 +85,16 @@ export const Header = () => {
                   Login
                 </Button>
               )}
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
             </div>
-
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
           </div>
 
           {/* Mobile Navigation */}
