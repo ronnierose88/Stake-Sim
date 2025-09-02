@@ -40,13 +40,11 @@ export const Header = () => {
               />
             </Link>
 
-            {/* Center Balance & Account */}
+            {/* Center Balance & Wallet */}
             <div className="flex-1 flex justify-center">
               {user ? (
-                <div className="flex items-center gap-0">
-                  <div
-                    className="px-6 py-3 bg-[#09202d] rounded-none"
-                  >
+                <div className="flex items-center gap-0 mx-auto" style={{ minWidth: 'fit-content' }}>
+                  <div className="px-6 py-3 bg-[#09202d] rounded-none flex items-center justify-center">
                     <div className="text-sm font-medium text-white">
                       ${user.balance.toFixed(2)}
                     </div>
