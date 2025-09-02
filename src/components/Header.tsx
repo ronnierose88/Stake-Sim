@@ -43,14 +43,12 @@ export const Header = () => {
             <div className="flex-1 flex justify-center">
               {user ? (
                 <div className="flex items-center gap-4">
-                  <div className="bg-gradient-accent rounded-lg px-4 py-2 shadow-neon-blue">
-                    <div className="text-sm text-accent-foreground font-medium">
+                  <div className="px-4 py-2 shadow-neon-blue bg-[#223344] rounded-none" /* sharp edges, dark bg, no gradient */>
+                    <div className="text-sm font-medium text-white">
                       ${user.balance.toFixed(2)}
                     </div>
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    {user.username}
-                  </span>
+                  {/* Removed username */}
                 </div>
               ) : null}
             </div>
