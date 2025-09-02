@@ -148,14 +148,8 @@ const Dice = () => {
   const resetGame = () => {
     setLastRoll(null);
     setLastResult(null);
-    // Do not reset dicePos here, so the dice stays at the last rolled number until a new roll
+    setDicePos(rollTarget);
   };
-
-  // When user changes target, move dicePos to match (unless rolling or after a roll)
-  useEffect(() => {
-    if (!isRolling && lastRoll === null) setDicePos(rollTarget);
-    // eslint-disable-next-line
-  }, [rollTarget, isRolling, lastRoll]);
 
   // --- UI ---
   return (
@@ -271,8 +265,8 @@ const Dice = () => {
                     <span className="text-xl font-bold text-primary">{rollTarget}</span>
                   </div>
                 </div>
-                {/* Dice Animation (only after rolling or while rolling) */}
-                {(isRolling || lastRoll !== null) && (
+                {/* Dice Animation (only after rolling) */}
+                {isRolling || lastRoll !== null ? (
                   <div
                     className="absolute top-1/2 -translate-y-1/2 z-30 transition-transform pointer-events-none"
                     style={{
@@ -287,7 +281,7 @@ const Dice = () => {
                       {Math.round(dicePos)}
                     </div>
                   </div>
-                )}
+                ) : null}
                 {/* Slider Input (hidden, but accessible for a11y) */}
                 <input
                   type="range"
