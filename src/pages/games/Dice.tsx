@@ -31,31 +31,8 @@ const Dice = () => {
   const [dicePos, setDicePos] = useState<number | null>(null); // null means no dice shown yet
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Reset dice animation on mode/target change
-  useEffect(() => {
-    if (!isRolling) setDicePos(rollTarget);
-    // eslint-disable-next-line
-  }, [rollTarget, isRolling]);
-
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen bg-[#132632]">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-neon-blue/20 to-neon-blue/5 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Dices className="w-10 h-10 text-neon-blue" />
-          </div>
-          <h1 className="text-4xl font-bold mb-4">Dice</h1>
-          <p className="text-lg text-muted-foreground mb-8">
-            Login to start rolling the dice and winning big!
-          </p>
-          <Button variant="casino" onClick={() => setIsLoginOpen(true)}>
-            Login to Play
-          </Button>
-        </div>
-        <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
-      </div>
-    );
-  }
+  // Remove useEffect that sets dicePos to rollTarget on target change
+  // (This is the cause of the dice snapping back to the target after rolling)
 
   // Calculate win chance and payout multiplier
   const winChance =
