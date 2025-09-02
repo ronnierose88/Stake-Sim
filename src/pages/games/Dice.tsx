@@ -74,7 +74,7 @@ const Dice = () => {
     // Deduct bet amount
     updateBalance(-betAmount);
     
-    // Simulate rolling animation delay
+    // Simulate rolling animation delay (reduced for faster play)
     setTimeout(() => {
       const roll = Math.floor(Math.random() * 100) + 1; // 1-100
       const won = roll < rollUnder;
@@ -105,7 +105,7 @@ const Dice = () => {
         
         toast.error(`💥 You lost! Rolled ${roll}`);
       }
-    }, 1500);
+    }, 500); // <-- was 1500, now 500ms for faster rolling
   };
 
   const resetGame = () => {
