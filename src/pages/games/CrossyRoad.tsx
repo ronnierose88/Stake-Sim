@@ -7,7 +7,6 @@ import { useUser } from '@/contexts/UserContext';
 import { ArrowLeft, Play, DollarSign, Trophy, Zap, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useSpring, animated } from '@react-spring/web';
 
 type RiskLevel = 'low' | 'medium' | 'high';
 
@@ -25,10 +24,9 @@ const CrossyRoad = () => {
   const [betAmount, setBetAmount] = useState(10);
   const [riskLevel, setRiskLevel] = useState<RiskLevel>('medium');
   const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
-  const [laneIndex, setLaneIndex] = useState(0);
+  const [laneIndex, setLaneIndex] = useState(0); // horizontal position
   const [isAnimating, setIsAnimating] = useState(false);
   const [isHit, setIsHit] = useState(false);
-  const [animOffset, setAnimOffset] = useState(0); // for sliding circles
 
   const riskConfigs: Record<RiskLevel, RiskConfig> = {
     low: {
@@ -88,16 +86,13 @@ const CrossyRoad = () => {
   };
 
   // Hop forward, random hit logic
-  // Animate chicken jump and circles slide
   const moveRight = () => {
     if (gameState !== 'playing' || isAnimating || isHit) return;
     setIsAnimating(true);
-    setAnimOffset(1); // trigger slide
 
     setTimeout(() => {
       setLaneIndex(prev => prev + 1);
       setCurrentMultiplier(getLane(laneIndex + 1).multiplier);
-      setAnimOffset(0); // reset slide after animation
 
       setTimeout(() => {
         const survivalCheck = Math.random() < currentConfig.survivalRate;
@@ -154,14 +149,6 @@ const CrossyRoad = () => {
       </div>
     );
   }
-
-  // Animation for sliding circles
-  const spring = useSpring({
-    transform: animOffset
-      ? 'translateX(-16.666%)' // slide left by one circle width (1/6)
-      : 'translateX(0%)',
-    config: { tension: 220, friction: 24 }
-  });
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
@@ -293,40 +280,28 @@ const CrossyRoad = () => {
                   {currentConfig.name}
                 </div>
               </div>
-              {/* Infinite Game Lanes with animation */}
-              <div className="relative bg-gray-800 rounded-lg p-8 h-40 overflow-hidden">
-                <animated.div
-                  style={spring}
-                  className="flex items-center justify-between w-full h-full"
-                >
-                  {visibleLanes.map((lane, idx) => (
-                    <div key={lane.index} className="relative flex flex-col items-center justify-center w-1/6">
-                      {/* Money Circle */}
-                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${idx === 0 ? 'bg-green-500' : 'bg-gray-700'} transition-all duration-300`}>
-                        <span className="text-white font-bold text-lg">${lane.amount.toFixed(2)}</span>
-                      </div>
-                      {/* Chicken with jump animation */}
-                      {idx === 0 && (
-                        <animated.div
-                          style={{
-                            transform: isAnimating
-                              ? 'translateY(-30px) scale(1.2)'
-                              : 'translateY(0px) scale(1)'
-                          }}
-                          className="absolute top-16 left-1/2 -translate-x-1/2 text-3xl transition-all duration-300"
-                        >
-                          {isHit ? '💥🐔' : '🐔'}
-                        </animated.div>
-                      )}
-                      {/* Car animation only if hit and chicken is in this lane */}
-                      {isHit && idx === 0 && (
-                        <div className="absolute top-16 left-0 text-3xl animate-[car-sweep_0.7s_linear]">
-                          🚗
-                        </div>
-                      )}
+              {/* Infinite Game Lanes */}
+              <div className="relative bg-gray-800 rounded-lg p-8 h-40 flex items-center justify-between">
+                {visibleLanes.map((lane, idx) => (
+                  <div key={lane.index} className="relative flex flex-col items-center justify-center w-1/6">
+                    {/* Money Circle */}
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${idx === 0 ? 'bg-green-500' : 'bg-gray-700'} transition-all duration-300`}>
+                      <span className="text-white font-bold text-lg">${lane.amount.toFixed(2)}</span>
                     </div>
-                  ))}
-                </animated.div>
+                    {/* Chicken */}
+                    {idx === 0 && (
+                      <div className="absolute top-16 left-1/2 -translate-x-1/2 text-3xl transition-all duration-300">
+                        {isHit ? '💥🐔' : '🐔'}
+                      </div>
+                    )}
+                    {/* Car animation only if hit and chicken is in this lane */}
+                    {isHit && idx === 0 && (
+                      <div className="absolute top-16 left-0 text-3xl animate-[car-sweep_0.7s_linear]">
+                        🚗
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
               {/* Controls */}
               {gameState === 'playing' && (
