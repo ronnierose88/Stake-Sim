@@ -8,15 +8,33 @@ import { ArrowLeft, Play, DollarSign, Trophy, Zap, AlertTriangle } from 'lucide-
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
-type RiskLevel = 'low' | 'medium' | 'high';
+const RTP_TARGET = 0.97;
 
-interface RiskConfig {
-  name: string;
-  color: string;
-  survivalRate: number;
-  multiplierIncrease: number;
-  description: string;
-}
+const RISK_SETTINGS = {
+  low: {
+    name: 'Low Risk',
+    color: 'from-green-500 to-emerald-500',
+    r: 1.15,
+    p: RTP_TARGET / 1.15, // ≈ 0.8435
+    description: 'Small multiplier, high survival chance'
+  },
+  medium: {
+    name: 'Medium Risk',
+    color: 'from-yellow-500 to-amber-500',
+    r: 1.25,
+    p: RTP_TARGET / 1.25, // ≈ 0.7760
+    description: 'Medium multiplier, medium survival chance'
+  },
+  high: {
+    name: 'High Risk',
+    color: 'from-red-500 to-orange-500',
+    r: 1.40,
+    p: RTP_TARGET / 1.40, // ≈ 0.6929
+    description: 'Big multiplier, low survival chance'
+  }
+} as const;
+
+type RiskLevel = keyof typeof RISK_SETTINGS;
 
 const CrossyRoad = () => {
   const { user, updateBalance, addBetHistory } = useUser();
@@ -24,41 +42,20 @@ const CrossyRoad = () => {
   const [betAmount, setBetAmount] = useState(10);
   const [riskLevel, setRiskLevel] = useState<RiskLevel>('medium');
   const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
-  const [laneIndex, setLaneIndex] = useState(0); // horizontal position
+  const [laneIndex, setLaneIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isHit, setIsHit] = useState(false);
 
-  const riskConfigs: Record<RiskLevel, RiskConfig> = {
-    low: {
-      name: 'Low Risk',
-      color: 'from-green-500 to-emerald-500',
-      survivalRate: 0.73,
-      multiplierIncrease: 0.15,
-      description: 'Fewer cars, safer crossing'
-    },
-    medium: {
-      name: 'Medium Risk',
-      color: 'from-yellow-500 to-amber-500',
-      survivalRate: 0.58,
-      multiplierIncrease: 0.25,
-      description: 'Moderate traffic, balanced risk'
-    },
-    high: {
-      name: 'High Risk',
-      color: 'from-red-500 to-orange-500',
-      survivalRate: 0.38,
-      multiplierIncrease: 0.4,
-      description: 'Heavy traffic, high rewards'
-    }
-  };
+  const riskConfig = RISK_SETTINGS[riskLevel];
+  const r = riskConfig.r;
+  const p = riskConfig.p;
 
-  const currentConfig = riskConfigs[riskLevel];
-
-  // Infinite lanes: dynamically calculate lane data based on laneIndex
+  // Compounding multiplier for each lane
   const getLane = (idx: number) => ({
     index: idx,
-    multiplier: 1 + currentConfig.multiplierIncrease * (idx + 1),
-    amount: betAmount * (1 + currentConfig.multiplierIncrease * (idx + 1))
+    multiplier: Number((r ** idx).toFixed(6)),
+    amount: Number((betAmount * (r ** idx)).toFixed(2)),
+    survival: Number((p ** idx).toFixed(4))
   });
 
   const visibleLanes = Array.from({ length: 6 }, (_, i) => getLane(laneIndex + i));
@@ -85,18 +82,19 @@ const CrossyRoad = () => {
     });
   };
 
-  // Hop forward, random hit logic
+  // Hop forward, compounding multiplier and survival odds
   const moveRight = () => {
     if (gameState !== 'playing' || isAnimating || isHit) return;
     setIsAnimating(true);
 
     setTimeout(() => {
-      setLaneIndex(prev => prev + 1);
-      setCurrentMultiplier(getLane(laneIndex + 1).multiplier);
+      const nextLane = laneIndex + 1;
+      setLaneIndex(nextLane);
+      setCurrentMultiplier(r ** nextLane);
 
       setTimeout(() => {
-        const survivalCheck = Math.random() < currentConfig.survivalRate;
-        if (!survivalCheck) {
+        const survived = Math.random() < p;
+        if (!survived) {
           setIsHit(true);
           setTimeout(() => {
             endGame(false);
@@ -118,7 +116,7 @@ const CrossyRoad = () => {
     setGameState('ended');
     setIsAnimating(false);
     if (won) {
-      const winnings = lanes[laneIndex].amount;
+      const winnings = getLane(laneIndex).amount;
       updateBalance(winnings);
       toast.success(`Cashed out $${winnings.toFixed(2)}!`);
       addBetHistory({
@@ -181,7 +179,7 @@ const CrossyRoad = () => {
             <Trophy className="w-8 h-8 text-yellow-400" />
             <div>
               <p className="text-sm text-muted-foreground">Current Multiplier</p>
-              <p className="text-xl font-bold">{currentMultiplier.toFixed(2)}x</p>
+              <p className="text-xl font-bold">{currentLane.multiplier.toFixed(2)}x</p>
             </div>
           </CardContent>
         </Card>
@@ -222,7 +220,7 @@ const CrossyRoad = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(riskConfigs).map(([key, config]) => (
+                    {Object.entries(RISK_SETTINGS).map(([key, config]) => (
                       <SelectItem key={key} value={key}>
                         <div className="flex items-center gap-2">
                           <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${config.color}`} />
@@ -233,7 +231,7 @@ const CrossyRoad = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {currentConfig.description}
+                  {riskConfig.description}
                 </p>
               </div>
 
@@ -254,12 +252,13 @@ const CrossyRoad = () => {
               <CardTitle>Risk Level Details</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`p-4 rounded-lg bg-gradient-to-r ${currentConfig.color} bg-opacity-20 mb-4`}>
-                <h3 className="font-bold text-lg mb-2">{currentConfig.name}</h3>
-                <p className="text-sm mb-3">{currentConfig.description}</p>
+              <div className={`p-4 rounded-lg bg-gradient-to-r ${riskConfig.color} bg-opacity-20 mb-4`}>
+                <h3 className="font-bold text-lg mb-2">{riskConfig.name}</h3>
+                <p className="text-sm mb-3">{riskConfig.description}</p>
                 <div className="space-y-2 text-sm">
-                  <div>Multiplier increase: +{currentConfig.multiplierIncrease}x per hop</div>
-                  <div>Survival rate: ~{Math.round(currentConfig.survivalRate * 100)}%</div>
+                  <div>Compounding multiplier: ×{riskConfig.r.toFixed(2)} per hop</div>
+                  <div>Survival chance per hop: {(riskConfig.p * 100).toFixed(2)}%</div>
+                  <div>House edge per hop: {(100 - RTP_TARGET * 100).toFixed(2)}%</div>
                 </div>
               </div>
             </CardContent>
@@ -276,8 +275,8 @@ const CrossyRoad = () => {
                 <div className="text-sm text-muted-foreground">
                   Potential Winnings: ${potentialWinnings.toFixed(2)}
                 </div>
-                <div className={`px-3 py-1 rounded-full text-sm bg-gradient-to-r ${currentConfig.color} bg-opacity-20`}>
-                  {currentConfig.name}
+                <div className={`px-3 py-1 rounded-full text-sm bg-gradient-to-r ${riskConfig.color} bg-opacity-20`}>
+                  {riskConfig.name}
                 </div>
               </div>
               {/* Infinite Game Lanes */}
@@ -310,35 +309,43 @@ const CrossyRoad = () => {
                   </React.Fragment>
                 ))}
               </div>
-              {/* Controls */}
-              {gameState === 'playing' && (
-                <div className="flex gap-3 mt-4">
-                  <Button 
-                    onClick={moveRight}
-                    disabled={isAnimating || isHit}
-                    className="flex-1"
-                    variant="casino"
-                  >
-                    Move Right 🐔
-                  </Button>
-                  {laneIndex > 0 && !isHit && (
+              {/* Controls & Info */}
+              <div className="flex flex-col md:flex-row gap-3 mt-4 items-center">
+                {gameState === 'playing' && (
+                  <>
                     <Button 
-                      onClick={cashOut}
-                      variant="success"
+                      onClick={moveRight}
+                      disabled={isAnimating || isHit}
                       className="flex-1"
+                      variant="casino"
                     >
-                      Cash Out (${potentialWinnings.toFixed(2)})
+                      Move Right 🐔
                     </Button>
-                  )}
-                </div>
-              )}
-              {gameState === 'ended' && (
-                <div className="mt-4">
+                    {laneIndex > 0 && !isHit && (
+                      <Button 
+                        onClick={cashOut}
+                        variant="success"
+                        className="flex-1"
+                      >
+                        Cash Out (${potentialWinnings.toFixed(2)})
+                      </Button>
+                    )}
+                    <div className="text-center text-xs md:text-sm text-muted-foreground mt-2 md:mt-0 md:ml-4">
+                      <div>
+                        Next hop: ×{riskConfig.r.toFixed(2)} multiplier, { (riskConfig.p * 100).toFixed(2) }% survival
+                      </div>
+                      <div>
+                        If you survive: ${ (potentialWinnings * riskConfig.r).toFixed(2) }
+                      </div>
+                    </div>
+                  </>
+                )}
+                {gameState === 'ended' && (
                   <Button onClick={resetGame} className="w-full" variant="casino">
                     Play Again
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </CardContent>
           </Card>
           {/* Add car down animation keyframes */}
