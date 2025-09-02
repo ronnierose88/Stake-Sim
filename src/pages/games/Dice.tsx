@@ -31,11 +31,10 @@ const Dice = () => {
   const [dicePos, setDicePos] = useState<number | null>(null); // null means no dice shown yet
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Reset dice animation on mode/target change
-  useEffect(() => {
-    if (!isRolling) setDicePos(rollTarget);
-    // eslint-disable-next-line
-  }, [rollTarget, isRolling]);
+  // Remove dicePos reset on rollTarget change
+  // useEffect(() => {
+  //   if (!isRolling) setDicePos(rollTarget);
+  // }, [rollTarget, isRolling]);
 
   if (!user) {
     return (
