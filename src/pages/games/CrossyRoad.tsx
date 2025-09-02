@@ -24,80 +24,44 @@ const CrossyRoad = () => {
   const [betAmount, setBetAmount] = useState(10);
   const [riskLevel, setRiskLevel] = useState<RiskLevel>('medium');
   const [currentMultiplier, setCurrentMultiplier] = useState(1.0);
-  const [hopsCompleted, setHopsCompleted] = useState(0);
-  const [playerPosition, setPlayerPosition] = useState(0);
-  const [cars, setCars] = useState<Array<{ id: number; lane: number; position: number; speed: number }>>([]);
+  const [laneIndex, setLaneIndex] = useState(0); // horizontal position
   const [isAnimating, setIsAnimating] = useState(false);
-  const gameLoopRef = useRef<number>();
+  const [isHit, setIsHit] = useState(false);
 
   const riskConfigs: Record<RiskLevel, RiskConfig> = {
     low: {
       name: 'Low Risk',
       color: 'from-green-500 to-emerald-500',
-      survivalRate: 0.73, // 73% survival rate for balanced RTP
+      survivalRate: 0.73,
       multiplierIncrease: 0.15,
       description: 'Fewer cars, safer crossing'
     },
     medium: {
       name: 'Medium Risk',
       color: 'from-yellow-500 to-amber-500',
-      survivalRate: 0.58, // 58% survival rate for balanced RTP
+      survivalRate: 0.58,
       multiplierIncrease: 0.25,
       description: 'Moderate traffic, balanced risk'
     },
     high: {
       name: 'High Risk',
       color: 'from-red-500 to-orange-500',
-      survivalRate: 0.38, // 38% survival rate for balanced RTP
+      survivalRate: 0.38,
       multiplierIncrease: 0.4,
       description: 'Heavy traffic, high rewards'
     }
   };
 
   const currentConfig = riskConfigs[riskLevel];
-  const potentialWinnings = betAmount * currentMultiplier;
 
-  // Generate cars based on risk level
-  const generateCars = () => {
-    const carCount = riskLevel === 'low' ? 3 : riskLevel === 'medium' ? 5 : 8;
-    const newCars = [];
-    
-    for (let i = 0; i < carCount; i++) {
-      newCars.push({
-        id: Math.random(),
-        lane: Math.floor(Math.random() * 6) + 1, // lanes 1-6
-        position: Math.random() * 100,
-        speed: riskLevel === 'low' ? 0.5 + Math.random() * 0.5 : 
-               riskLevel === 'medium' ? 1 + Math.random() * 1 : 
-               1.5 + Math.random() * 1.5
-      });
-    }
-    
-    setCars(newCars);
-  };
+  // Each lane has a multiplier
+  const lanes = Array.from({ length: 6 }, (_, i) => ({
+    index: i,
+    multiplier: 1 + currentConfig.multiplierIncrease * (i + 1),
+    amount: betAmount * (1 + currentConfig.multiplierIncrease * (i + 1))
+  }));
 
-  // Game loop for car movement
-  useEffect(() => {
-    if (gameState === 'playing') {
-      const gameLoop = () => {
-        setCars(prevCars => 
-          prevCars.map(car => ({
-            ...car,
-            position: (car.position + car.speed) % 100
-          }))
-        );
-        gameLoopRef.current = requestAnimationFrame(gameLoop);
-      };
-      
-      gameLoopRef.current = requestAnimationFrame(gameLoop);
-    }
-    
-    return () => {
-      if (gameLoopRef.current) {
-        cancelAnimationFrame(gameLoopRef.current);
-      }
-    };
-  }, [gameState]);
+  const potentialWinnings = lanes[laneIndex]?.amount || betAmount;
 
   const startGame = () => {
     if (!user) return;
@@ -105,57 +69,47 @@ const CrossyRoad = () => {
       toast.error("Insufficient balance!");
       return;
     }
-
     updateBalance(-betAmount);
     setGameState('playing');
+    setLaneIndex(0);
     setCurrentMultiplier(1.0);
-    setHopsCompleted(0);
-    setPlayerPosition(0);
-    generateCars();
-    
+    setIsHit(false);
     addBetHistory({
       game: 'Crossy Road',
       betAmount,
-      result: 'loss', // Will update if they cash out
+      result: 'loss',
       payout: 0
     });
   };
 
-  const hop = async () => {
-    if (gameState !== 'playing' || isAnimating) return;
-    
+  // Hop forward, random hit logic
+  const moveRight = () => {
+    if (gameState !== 'playing' || isAnimating || laneIndex >= lanes.length - 1 || isHit) return;
     setIsAnimating(true);
-    
-    // Check for collision with cars
-    const collision = cars.some(car => {
-      const carLane = car.lane;
-      const carPos = car.position;
-      const nextPlayerLane = playerPosition + 1;
-      
-      // Check if car is in the same lane and close enough to cause collision
-      return carLane === nextPlayerLane && 
-             carPos > 20 && carPos < 80; // Car is in collision zone
-    });
 
-    // Apply survival rate calculation
-    const survivalCheck = Math.random() < currentConfig.survivalRate;
-    
+    // Random hit check after hop
     setTimeout(() => {
-      if (!collision && survivalCheck) {
-        // Successful hop
-        setPlayerPosition(prev => prev + 1);
-        setHopsCompleted(prev => prev + 1);
-        setCurrentMultiplier(prev => prev + currentConfig.multiplierIncrease);
-        setIsAnimating(false);
-      } else {
-        // Hit by car - game over
-        endGame(false);
-      }
-    }, 300);
+      setLaneIndex(prev => prev + 1);
+      setCurrentMultiplier(lanes[laneIndex + 1].multiplier);
+
+      // After hop, check for hit
+      setTimeout(() => {
+        const survivalCheck = Math.random() < currentConfig.survivalRate;
+        if (!survivalCheck) {
+          setIsHit(true);
+          // Show car sweeping in for animation
+          setTimeout(() => {
+            endGame(false);
+          }, 700); // car animation duration
+        } else {
+          setIsAnimating(false);
+        }
+      }, 350); // chicken hop animation duration
+    }, 350);
   };
 
   const cashOut = () => {
-    if (gameState === 'playing' && hopsCompleted > 0) {
+    if (gameState === 'playing' && laneIndex > 0 && !isHit) {
       endGame(true);
     }
   };
@@ -163,13 +117,10 @@ const CrossyRoad = () => {
   const endGame = (won: boolean) => {
     setGameState('ended');
     setIsAnimating(false);
-    
     if (won) {
-      const winnings = potentialWinnings;
+      const winnings = lanes[laneIndex].amount;
       updateBalance(winnings);
       toast.success(`Cashed out $${winnings.toFixed(2)}!`);
-      
-      // Update bet history
       addBetHistory({
         game: 'Crossy Road',
         betAmount,
@@ -177,16 +128,15 @@ const CrossyRoad = () => {
         payout: winnings
       });
     } else {
-      toast.error("Got hit by a car! Better luck next time.");
+      toast.error("You got hit! Better luck next time.");
     }
   };
 
   const resetGame = () => {
     setGameState('setup');
     setCurrentMultiplier(1.0);
-    setHopsCompleted(0);
-    setPlayerPosition(0);
-    setCars([]);
+    setLaneIndex(0);
+    setIsHit(false);
   };
 
   if (!user) {
@@ -201,7 +151,7 @@ const CrossyRoad = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-2xl">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Link to="/games">
@@ -210,8 +160,8 @@ const CrossyRoad = () => {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold">🐸 Crossy Road</h1>
-          <p className="text-muted-foreground">Hop across traffic and cash out before getting hit!</p>
+          <h1 className="text-3xl font-bold">🐔 Crossy Road</h1>
+          <p className="text-muted-foreground">Move sideways across lanes and cash out before getting hit!</p>
         </div>
       </div>
 
@@ -226,7 +176,6 @@ const CrossyRoad = () => {
             </div>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-card">
           <CardContent className="p-4 flex items-center gap-3">
             <Trophy className="w-8 h-8 text-yellow-400" />
@@ -236,13 +185,12 @@ const CrossyRoad = () => {
             </div>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-card">
           <CardContent className="p-4 flex items-center gap-3">
             <Zap className="w-8 h-8 text-blue-400" />
             <div>
-              <p className="text-sm text-muted-foreground">Hops Completed</p>
-              <p className="text-xl font-bold">{hopsCompleted}</p>
+              <p className="text-sm text-muted-foreground">Lane</p>
+              <p className="text-xl font-bold">{laneIndex + 1}</p>
             </div>
           </CardContent>
         </Card>
@@ -332,58 +280,41 @@ const CrossyRoad = () => {
                   {currentConfig.name}
                 </div>
               </div>
-
-              {/* Game Road */}
-              <div className="relative bg-gray-800 rounded-lg p-4 h-96 overflow-hidden">
-                {/* Road lanes */}
-                {[1, 2, 3, 4, 5, 6].map(lane => (
-                  <div key={lane} className="absolute w-full h-12 border-b border-yellow-400 border-dashed opacity-30"
-                       style={{ top: `${lane * 60}px` }} />
-                ))}
-
-                {/* Player */}
-                <div 
-                  className={`absolute transition-all duration-300 text-2xl ${isAnimating ? 'scale-110' : ''}`}
-                  style={{ 
-                    bottom: `${playerPosition * 60 + 20}px`, 
-                    left: '50%', 
-                    transform: 'translateX(-50%)' 
-                  }}
-                >
-                  🐸
-                </div>
-
-                {/* Cars */}
-                {cars.map(car => (
-                  <div
-                    key={car.id}
-                    className="absolute text-xl transition-all duration-100"
-                    style={{
-                      top: `${car.lane * 60 + 15}px`,
-                      left: `${car.position}%`,
-                      transform: 'translateX(-50%)'
-                    }}
-                  >
-                    🚗
+              {/* Game Lanes */}
+              <div className="relative bg-gray-800 rounded-lg p-8 h-40 flex items-center justify-between">
+                {lanes.map((lane, idx) => (
+                  <div key={lane.index} className="relative flex flex-col items-center justify-center w-1/6">
+                    {/* Money Circle */}
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${laneIndex === idx ? 'bg-green-500' : 'bg-gray-700'} transition-all duration-300`}>
+                      <span className="text-white font-bold text-lg">${lane.amount.toFixed(2)}</span>
+                    </div>
+                    {/* Chicken */}
+                    {laneIndex === idx && (
+                      <div className="absolute top-16 left-1/2 -translate-x-1/2 text-3xl transition-all duration-300">
+                        {isHit ? '💥🐔' : '🐔'}
+                      </div>
+                    )}
+                    {/* Car animation only if hit and chicken is in this lane */}
+                    {isHit && laneIndex === idx && (
+                      <div className="absolute top-16 left-0 text-3xl animate-[car-sweep_0.7s_linear]">
+                        🚗
+                      </div>
+                    )}
                   </div>
                 ))}
-
-                {/* Finish line */}
-                <div className="absolute top-0 w-full h-2 bg-green-400" />
               </div>
-
               {/* Controls */}
               {gameState === 'playing' && (
                 <div className="flex gap-3 mt-4">
                   <Button 
-                    onClick={hop}
-                    disabled={isAnimating}
+                    onClick={moveRight}
+                    disabled={isAnimating || laneIndex >= lanes.length - 1 || isHit}
                     className="flex-1"
                     variant="casino"
                   >
-                    Hop Forward 🐸
+                    Move Right 🐔
                   </Button>
-                  {hopsCompleted > 0 && (
+                  {laneIndex > 0 && !isHit && (
                     <Button 
                       onClick={cashOut}
                       variant="success"
@@ -394,7 +325,6 @@ const CrossyRoad = () => {
                   )}
                 </div>
               )}
-
               {gameState === 'ended' && (
                 <div className="mt-4">
                   <Button onClick={resetGame} className="w-full" variant="casino">
@@ -404,6 +334,16 @@ const CrossyRoad = () => {
               )}
             </CardContent>
           </Card>
+          {/* Add car sweep animation keyframes */}
+          <style>
+            {`
+              @keyframes car-sweep {
+                0% { left: 0; opacity: 0; }
+                20% { opacity: 1; }
+                100% { left: 80px; opacity: 1; }
+              }
+            `}
+          </style>
         </div>
       )}
     </div>
