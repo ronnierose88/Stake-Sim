@@ -23,7 +23,10 @@ export const Header = () => {
 
   return (
     <>
-      <header className="bg-gradient-card border-b border-border sticky top-0 z-50 backdrop-blur-sm">
+      <header
+        className="border-b border-border sticky top-0 z-50 backdrop-blur-sm"
+        style={{ backgroundColor: '#1b2b38' }}
+      >
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -34,9 +37,6 @@ export const Header = () => {
                 className="w-10 h-10 rounded"
                 style={{ background: 'transparent' }}
               />
-              <span className="bg-gradient-primary bg-clip-text text-transparent">
-                StakeSim
-              </span>
             </Link>
 
             {/* Desktop Navigation */}
