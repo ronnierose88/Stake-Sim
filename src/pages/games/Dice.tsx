@@ -28,12 +28,50 @@ const Dice = () => {
   const [lastRoll, setLastRoll] = useState<number | null>(null);
   const [lastResult, setLastResult] = useState<'win' | 'loss' | null>(null);
   const [mode, setMode] = useState<Mode>('under');
-  const [dicePos, setDicePos] = useState<number | null>(null); // null means not shown
+  const [dicePos, setDicePos] = useState<number>(SLIDER_MIN);
+
+  // Reset dice animation on mode/target change
+  useEffect(() => {
+    if (!isRolling) setDicePos(rollTarget);
+    // eslint-disable-next-line
+  }, [rollTarget, isRolling]);
+
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen bg-[#132632]">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-neon-blue/20 to-neon-blue/5 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Dices className="w-10 h-10 text-neon-blue" />
+          </div>
+          <h1 className="text-4xl font-bold mb-4">Dice</h1>
+          <p className="text-lg text-muted-foreground mb-8">
+            Login to start rolling the dice and winning big!
+          </p>
+          <Button variant="casino" onClick={() => setIsLoginOpen(true)}>
+            Login to Play
+          </Button>
+        </div>
+        <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} />
+      </div>
+    );
+  }
+
+  // Calculate win chance and payout multiplier
+  const winChance =
+    mode === 'under'
+      ? rollTarget - 1
+      : 100 - rollTarget;
+  const payoutMultiplier = winChance > 0 ? (100 / winChance) * 0.98 : 0; // 2% house edge
+  const potentialWin = betAmount * payoutMultiplier;
+
+  // Calculate dice position as a percentage for slider track
+  const getPercent = (val: number) =>
+    ((val - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100;
 
   // Animate dice to stop at result
   const animateDiceTo = (final: number, cb: () => void) => {
     // Animate dice to the rolled number (single smooth animation)
-    const start = dicePos === null ? rollTarget : dicePos;
+    const start = dicePos;
     const distance = final - start;
     const duration = 400;
     const startTime = performance.now();
@@ -110,7 +148,7 @@ const Dice = () => {
   const resetGame = () => {
     setLastRoll(null);
     setLastResult(null);
-    // Do not reset dicePos here, so it stays at last rolled position
+    setDicePos(rollTarget);
   };
 
   // --- UI ---
@@ -227,8 +265,8 @@ const Dice = () => {
                     <span className="text-xl font-bold text-primary">{rollTarget}</span>
                   </div>
                 </div>
-                {/* Dice Animation (only after rolling or while rolling) */}
-                {(isRolling || lastRoll !== null) && dicePos !== null && (
+                {/* Dice Animation (only after rolling) */}
+                {isRolling || lastRoll !== null ? (
                   <div
                     className="absolute top-1/2 -translate-y-1/2 z-30 transition-transform pointer-events-none"
                     style={{
@@ -243,7 +281,7 @@ const Dice = () => {
                       {Math.round(dicePos)}
                     </div>
                   </div>
-                )}
+                ) : null}
                 {/* Slider Input (hidden, but accessible for a11y) */}
                 <input
                   type="range"
