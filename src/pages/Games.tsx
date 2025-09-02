@@ -63,10 +63,20 @@ const Games = () => {
       title: 'Plinko',
       description: 'Drop the ball and watch it bounce through pegs to win big!',
       difficulty: 'Easy',
-      payout: 'Up to 10x',
+      payout: 'Up to 500x',
       icon: '🎯',
       path: '/games/plinko',
       color: 'from-purple-500 to-pink-500'
+    },
+    {
+      id: 'crossy-road',
+      title: 'Crossy Road',
+      description: 'Hop across traffic and cash out before getting hit!',
+      difficulty: 'High',
+      payout: 'Unlimited',
+      icon: '🐸',
+      path: '/games/crossy-road',
+      color: 'from-cyan-500 to-blue-500'
     }
   ];
 
