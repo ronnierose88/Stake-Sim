@@ -21,47 +21,37 @@ import {
   ArrowUpRight,
   Layers
 } from 'lucide-react';
+import blackjackLogo from '@/assets/blackjack-logo.png';
+import crashLogo from '@/assets/crash-logo.png';
+import diceLogo from '@/assets/dice-logo.png';
+import minesLogo from '@/assets/mines-logo.png';
+import plinkoLogo from '@/assets/plinko-logo.png';
 
 const stakeOriginals = [
   {
     name: 'Blackjack',
-    description: 'Beat the dealer in this classic card game.',
-    icon: Landmark,
-    path: '/games/blackjack',
-    color: 'text-casino-gold',
-    bgColor: 'from-casino-gold/20 to-casino-gold/5'
+    logo: blackjackLogo,
+    path: '/games/blackjack'
   },
   {
     name: 'Crash',
-    description: 'Cash out before the multiplier crashes!',
-    icon: TrendingUp,
-    path: '/games/crash',
-    color: 'text-neon-pink',
-    bgColor: 'from-neon-pink/20 to-neon-pink/5'
+    logo: crashLogo,
+    path: '/games/crash'
   },
   {
     name: 'Dice',
-    description: 'Roll the dice and predict the outcome.',
-    icon: Dices,
-    path: '/games/dice',
-    color: 'text-neon-blue',
-    bgColor: 'from-neon-blue/20 to-neon-blue/5'
+    logo: diceLogo,
+    path: '/games/dice'
   },
   {
     name: 'Mines',
-    description: 'Navigate through a minefield to multiply your winnings.',
-    icon: Bomb,
-    path: '/games/mines',
-    color: 'text-casino-red',
-    bgColor: 'from-casino-red/20 to-casino-red/5'
+    logo: minesLogo,
+    path: '/games/mines'
   },
   {
     name: 'Plinko',
-    description: 'Drop the ball and win big prizes!',
-    icon: Layers,
-    path: '/games/plinko',
-    color: 'text-casino-green',
-    bgColor: 'from-casino-green/20 to-casino-green/5'
+    logo: plinkoLogo,
+    path: '/games/plinko'
   }
 ];
 
@@ -106,45 +96,14 @@ const Index = () => {
                 className="min-w-[260px] max-w-xs flex-shrink-0 group"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
-                <Card className="relative bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon-green hover:scale-105 animate-slide-up group h-full overflow-hidden flex flex-col items-center justify-end min-h-[260px]">
-                  {/* Large brighter, more portrait icon as background */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div
-                      className="flex items-center justify-center rounded-lg"
-                      style={{
-                        width: '70%',
-                        height: '95%',
-                        background: 'rgba(255,255,255,0.07)',
-                        boxShadow: '0 0 32px 8px rgba(255,255,255,0.08)',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <game.icon
-                        className={`w-20 h-32 md:w-24 md:h-40 ${game.color}`}
-                        style={{
-                          opacity: 0.38,
-                          filter: 'drop-shadow(0 0 12px #fff) brightness(1.5)',
-                          objectFit: 'cover',
-                        }}
-                      />
-                    </div>
-                  </div>
-                  {/* Overlayed game name and description at the top */}
-                  <div className="relative z-10 flex flex-col items-center w-full px-4 pt-4 pb-4">
-                    <div className="w-full flex flex-col items-center">
-                      <div className="text-2xl font-bold text-center drop-shadow-md mb-1 text-foreground">
-                        {game.name}
-                      </div>
-                      <CardDescription className="text-base text-center text-muted-foreground mb-4">
-                        {game.description}
-                      </CardDescription>
-                    </div>
-                    <div className="flex-1" />
-                    <Button variant="game" className="w-full group-hover:shadow-neon-green mt-auto">
-                      <ArrowUpRight className="w-4 h-4" />
-                      Play
-                    </Button>
-                  </div>
+                <Card className="relative bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon-green hover:scale-105 animate-slide-up group h-full overflow-hidden flex flex-col items-center justify-center min-h-[260px]">
+                  {/* Only the logo, centered */}
+                  <img
+                    src={game.logo}
+                    alt={`${game.name} Logo`}
+                    className="w-32 h-32 object-contain"
+                    style={{ margin: 'auto' }}
+                  />
                 </Card>
               </Link>
             ))}
