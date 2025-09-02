@@ -43,7 +43,10 @@ export const Header = () => {
             <div className="flex-1 flex justify-center">
               {user ? (
                 <div className="flex items-center gap-4">
-                  <div className="px-4 py-2 shadow-neon-blue bg-[#223344] rounded-none" /* sharp edges, dark bg, no gradient */>
+                  <div
+                    className="px-6 py-3 bg-[#09202d] rounded-none"
+                    /* bigger, sharp edges, dark bg, no glow */
+                  >
                     <div className="text-sm font-medium text-white">
                       ${user.balance.toFixed(2)}
                     </div>
