@@ -54,14 +54,17 @@ const CrossyRoad = () => {
 
   const currentConfig = riskConfigs[riskLevel];
 
-  // Each lane has a multiplier
-  const lanes = Array.from({ length: 6 }, (_, i) => ({
-    index: i,
-    multiplier: 1 + currentConfig.multiplierIncrease * (i + 1),
-    amount: betAmount * (1 + currentConfig.multiplierIncrease * (i + 1))
-  }));
+  // Infinite lanes: dynamically calculate lane data based on laneIndex
+  const getLane = (idx: number) => ({
+    index: idx,
+    multiplier: 1 + currentConfig.multiplierIncrease * (idx + 1),
+    amount: betAmount * (1 + currentConfig.multiplierIncrease * (idx + 1))
+  });
 
-  const potentialWinnings = lanes[laneIndex]?.amount || betAmount;
+  const visibleLanes = Array.from({ length: 6 }, (_, i) => getLane(laneIndex + i));
+  const currentLane = getLane(laneIndex);
+
+  const potentialWinnings = currentLane.amount;
 
   const startGame = () => {
     if (!user) return;
@@ -84,27 +87,24 @@ const CrossyRoad = () => {
 
   // Hop forward, random hit logic
   const moveRight = () => {
-    if (gameState !== 'playing' || isAnimating || laneIndex >= lanes.length - 1 || isHit) return;
+    if (gameState !== 'playing' || isAnimating || isHit) return;
     setIsAnimating(true);
 
-    // Random hit check after hop
     setTimeout(() => {
       setLaneIndex(prev => prev + 1);
-      setCurrentMultiplier(lanes[laneIndex + 1].multiplier);
+      setCurrentMultiplier(getLane(laneIndex + 1).multiplier);
 
-      // After hop, check for hit
       setTimeout(() => {
         const survivalCheck = Math.random() < currentConfig.survivalRate;
         if (!survivalCheck) {
           setIsHit(true);
-          // Show car sweeping in for animation
           setTimeout(() => {
             endGame(false);
-          }, 700); // car animation duration
+          }, 700);
         } else {
           setIsAnimating(false);
         }
-      }, 350); // chicken hop animation duration
+      }, 350);
     }, 350);
   };
 
@@ -280,22 +280,22 @@ const CrossyRoad = () => {
                   {currentConfig.name}
                 </div>
               </div>
-              {/* Game Lanes */}
+              {/* Infinite Game Lanes */}
               <div className="relative bg-gray-800 rounded-lg p-8 h-40 flex items-center justify-between">
-                {lanes.map((lane, idx) => (
+                {visibleLanes.map((lane, idx) => (
                   <div key={lane.index} className="relative flex flex-col items-center justify-center w-1/6">
                     {/* Money Circle */}
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${laneIndex === idx ? 'bg-green-500' : 'bg-gray-700'} transition-all duration-300`}>
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${idx === 0 ? 'bg-green-500' : 'bg-gray-700'} transition-all duration-300`}>
                       <span className="text-white font-bold text-lg">${lane.amount.toFixed(2)}</span>
                     </div>
                     {/* Chicken */}
-                    {laneIndex === idx && (
+                    {idx === 0 && (
                       <div className="absolute top-16 left-1/2 -translate-x-1/2 text-3xl transition-all duration-300">
                         {isHit ? '💥🐔' : '🐔'}
                       </div>
                     )}
                     {/* Car animation only if hit and chicken is in this lane */}
-                    {isHit && laneIndex === idx && (
+                    {isHit && idx === 0 && (
                       <div className="absolute top-16 left-0 text-3xl animate-[car-sweep_0.7s_linear]">
                         🚗
                       </div>
@@ -308,7 +308,7 @@ const CrossyRoad = () => {
                 <div className="flex gap-3 mt-4">
                   <Button 
                     onClick={moveRight}
-                    disabled={isAnimating || laneIndex >= lanes.length - 1 || isHit}
+                    disabled={isAnimating || isHit}
                     className="flex-1"
                     variant="casino"
                   >
