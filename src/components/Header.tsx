@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useUser } from '@/contexts/UserContext';
 import { LoginDialog } from '@/components/LoginDialog';
 import { Menu, X } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 import StakeLogo from '@/assets/stake-logo.png'; // <-- Add this line (adjust path if needed)
 
 export const Header = () => {
@@ -42,16 +43,19 @@ export const Header = () => {
             {/* Center Balance & Account */}
             <div className="flex-1 flex justify-center">
               {user ? (
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-0">
                   <div
                     className="px-6 py-3 bg-[#09202d] rounded-none"
-                    /* bigger, sharp edges, dark bg, no glow */
                   >
                     <div className="text-sm font-medium text-white">
                       ${user.balance.toFixed(2)}
                     </div>
                   </div>
-                  {/* Removed username */}
+                  <Link to="/wallet">
+                    <div className="px-4 py-3 bg-[#0369e9] rounded-none flex items-center justify-center" style={{ marginLeft: '-1px' }}>
+                      <Wallet className="w-5 h-5 text-white" />
+                    </div>
+                  </Link>
                 </div>
               ) : null}
             </div>
