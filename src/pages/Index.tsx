@@ -6,21 +6,7 @@ import { LoginDialog } from '@/components/LoginDialog';
 import { useState } from 'react';
 import casinoHero from '@/assets/casino-hero.jpg';
 import stakeLogo from '@/assets/stake-logo.png';
-import { 
-  Gamepad2, 
-  Dices, 
-  Bomb, 
-  TrendingUp, 
-  Coins,
-  Trophy,
-  Wallet,
-  Users,
-  Sparkles,
-  Zap,
-  Landmark,
-  ArrowUpRight,
-  Layers
-} from 'lucide-react';
+import diceLogo from '@/assets/dice-logo.png';
 
 const stakeOriginals = [
   {
@@ -42,7 +28,7 @@ const stakeOriginals = [
   {
     name: 'Dice',
     description: 'Roll the dice and predict the outcome.',
-    icon: Dices,
+    icon: diceLogo,
     path: '/games/dice',
     color: 'text-neon-blue',
     bgColor: 'from-neon-blue/20 to-neon-blue/5'
@@ -107,7 +93,7 @@ const Index = () => {
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
                 <Card className="relative bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon-green hover:scale-105 animate-slide-up group h-full overflow-hidden flex flex-col items-center justify-end min-h-[260px]">
-                  {/* Large brighter, more portrait icon as background */}
+                  {/* Large icon as background */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div
                       className="flex items-center justify-center rounded-lg"
@@ -119,14 +105,27 @@ const Index = () => {
                         overflow: 'hidden',
                       }}
                     >
-                      <game.icon
-                        className={`w-20 h-32 md:w-24 md:h-40 ${game.color}`}
-                        style={{
-                          opacity: 0.38,
-                          filter: 'drop-shadow(0 0 12px #fff) brightness(1.5)',
-                          objectFit: 'cover',
-                        }}
-                      />
+                      {game.name === 'Dice' ? (
+                        <img
+                          src={game.icon}
+                          alt="Dice Logo"
+                          className="object-contain"
+                          style={{
+                            maxWidth: '100%',
+                            maxHeight: '100%',
+                            opacity: 0.9,
+                          }}
+                        />
+                      ) : (
+                        <game.icon
+                          className={`w-20 h-32 md:w-24 md:h-40 ${game.color}`}
+                          style={{
+                            opacity: 0.38,
+                            filter: 'drop-shadow(0 0 12px #fff) brightness(1.5)',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                   {/* Overlayed game name and description at the top */}
