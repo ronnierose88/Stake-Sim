@@ -27,6 +27,7 @@ const CrossyRoad = () => {
   const [laneIndex, setLaneIndex] = useState(0); // horizontal position
   const [isAnimating, setIsAnimating] = useState(false);
   const [isHit, setIsHit] = useState(false);
+  const [jumping, setJumping] = useState(false);
 
   const riskConfigs: Record<RiskLevel, RiskConfig> = {
     low: {
@@ -85,15 +86,19 @@ const CrossyRoad = () => {
     });
   };
 
-  // Hop forward, random hit logic
+  // Hop forward, random hit logic with jump animation
   const moveRight = () => {
     if (gameState !== 'playing' || isAnimating || isHit) return;
     setIsAnimating(true);
+    setJumping(true);
 
+    // Animate chicken jump
     setTimeout(() => {
+      setJumping(false);
       setLaneIndex(prev => prev + 1);
       setCurrentMultiplier(getLane(laneIndex + 1).multiplier);
 
+      // Animate circles sliding down
       setTimeout(() => {
         const survivalCheck = Math.random() < currentConfig.survivalRate;
         if (!survivalCheck) {
@@ -280,8 +285,14 @@ const CrossyRoad = () => {
                   {currentConfig.name}
                 </div>
               </div>
-              {/* Infinite Game Lanes */}
-              <div className="relative bg-gray-800 rounded-lg p-8 h-40 flex items-center justify-between">
+              {/* Infinite Game Lanes with animation */}
+              <div
+                className={`relative bg-gray-800 rounded-lg p-8 h-40 flex items-center justify-between overflow-hidden`}
+                style={{
+                  transition: 'transform 0.35s cubic-bezier(.4,2,.6,1)',
+                  transform: jumping ? 'translateY(40px)' : 'translateY(0)'
+                }}
+              >
                 {visibleLanes.map((lane, idx) => (
                   <div key={lane.index} className="relative flex flex-col items-center justify-center w-1/6">
                     {/* Money Circle */}
@@ -290,7 +301,13 @@ const CrossyRoad = () => {
                     </div>
                     {/* Chicken */}
                     {idx === 0 && (
-                      <div className="absolute top-16 left-1/2 -translate-x-1/2 text-3xl transition-all duration-300">
+                      <div
+                        className={`absolute top-16 left-1/2 -translate-x-1/2 text-3xl transition-all duration-300`}
+                        style={{
+                          transition: 'transform 0.35s cubic-bezier(.4,2,.6,1)',
+                          transform: jumping ? 'translateY(-40px) scale(1.2)' : 'translateY(0) scale(1)'
+                        }}
+                      >
                         {isHit ? '💥🐔' : '🐔'}
                       </div>
                     )}
