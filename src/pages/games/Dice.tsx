@@ -28,11 +28,17 @@ const Dice = () => {
   const [lastRoll, setLastRoll] = useState<number | null>(null);
   const [lastResult, setLastResult] = useState<'win' | 'loss' | null>(null);
   const [mode, setMode] = useState<Mode>('under');
-  const [dicePos, setDicePos] = useState<number>(SLIDER_MIN);
+  const [dicePos, setDicePos] = useState<number | null>(null); // null means not shown
 
   // Reset dice animation on mode/target change
   useEffect(() => {
     if (!isRolling) setDicePos(rollTarget);
+    // eslint-disable-next-line
+  }, [rollTarget, isRolling]);
+
+  // When user changes target, do not move dice icon (dicePos) unless not rolled yet
+  useEffect(() => {
+    if (!isRolling && lastRoll === null) setDicePos(null);
     // eslint-disable-next-line
   }, [rollTarget, isRolling]);
 
@@ -71,7 +77,7 @@ const Dice = () => {
   // Animate dice to stop at result
   const animateDiceTo = (final: number, cb: () => void) => {
     // Animate dice to the rolled number (single smooth animation)
-    const start = dicePos;
+    const start = dicePos === null ? rollTarget : dicePos;
     const distance = final - start;
     const duration = 400;
     const startTime = performance.now();
@@ -148,7 +154,7 @@ const Dice = () => {
   const resetGame = () => {
     setLastRoll(null);
     setLastResult(null);
-    setDicePos(rollTarget);
+    setDicePos(null);
   };
 
   // --- UI ---
@@ -265,8 +271,8 @@ const Dice = () => {
                     <span className="text-xl font-bold text-primary">{rollTarget}</span>
                   </div>
                 </div>
-                {/* Dice Animation (only after rolling) */}
-                {isRolling || lastRoll !== null ? (
+                {/* Dice Animation (only after rolling or while rolling) */}
+                {(isRolling || lastRoll !== null) && dicePos !== null && (
                   <div
                     className="absolute top-1/2 -translate-y-1/2 z-30 transition-transform pointer-events-none"
                     style={{
@@ -281,7 +287,7 @@ const Dice = () => {
                       {Math.round(dicePos)}
                     </div>
                   </div>
-                ) : null}
+                )}
                 {/* Slider Input (hidden, but accessible for a11y) */}
                 <input
                   type="range"
