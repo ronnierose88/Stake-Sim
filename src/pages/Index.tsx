@@ -107,12 +107,25 @@ const Index = () => {
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
                 <Card className="relative bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon-green hover:scale-105 animate-slide-up group h-full overflow-hidden flex flex-col items-center justify-end min-h-[260px]">
-                  {/* Large faded icon as background */}
+                  {/* Large brighter, more square icon as background */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <game.icon
-                      className={`w-32 h-32 opacity-10 ${game.color}`}
-                      style={{ filter: 'blur(0.5px)' }}
-                    />
+                    <div
+                      className="flex items-center justify-center rounded-lg"
+                      style={{
+                        width: '90%',
+                        height: '90%',
+                        background: 'rgba(255,255,255,0.07)',
+                        boxShadow: '0 0 32px 8px rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      <game.icon
+                        className={`w-24 h-24 md:w-28 md:h-28 ${game.color}`}
+                        style={{
+                          opacity: 0.35,
+                          filter: 'drop-shadow(0 0 12px #fff) brightness(1.5)',
+                        }}
+                      />
+                    </div>
                   </div>
                   {/* Overlayed game name */}
                   <div className="relative z-10 flex flex-col items-center w-full px-4 pt-8 pb-4">
