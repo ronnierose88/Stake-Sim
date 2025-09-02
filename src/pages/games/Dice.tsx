@@ -29,37 +29,12 @@ const Dice = () => {
   const [lastResult, setLastResult] = useState<'win' | 'loss' | null>(null);
   const [mode, setMode] = useState<Mode>('under');
   const [dicePos, setDicePos] = useState<number>(SLIDER_MIN);
-  const [isDiceAnimating, setIsDiceAnimating] = useState(true);
-
-  const animationRef = useRef<number | null>(null);
-  const directionRef = useRef<1 | -1>(1);
-
-  // Animate dice along slider
-  useEffect(() => {
-    if (!isDiceAnimating) return;
-    let pos = dicePos;
-    let dir = directionRef.current;
-    const animate = () => {
-      if (!isDiceAnimating) return;
-      // Move dice between min and max
-      if (pos >= SLIDER_MAX) dir = -1;
-      if (pos <= SLIDER_MIN) dir = 1;
-      pos += dir * 0.5; // speed
-      setDicePos(pos);
-      directionRef.current = dir;
-      animationRef.current = requestAnimationFrame(animate);
-    };
-    animationRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
-    // eslint-disable-next-line
-  }, [isDiceAnimating]);
 
   // Reset dice animation on mode/target change
   useEffect(() => {
-    if (!isRolling) setIsDiceAnimating(true);
-  }, [mode, rollTarget, isRolling]);
+    if (!isRolling) setDicePos(rollTarget);
+    // eslint-disable-next-line
+  }, [rollTarget, isRolling]);
 
   if (!user) {
     return (
@@ -95,20 +70,24 @@ const Dice = () => {
 
   // Animate dice to stop at result
   const animateDiceTo = (final: number, cb: () => void) => {
-    setIsDiceAnimating(false);
-    let pos = dicePos;
-    let dir = pos < final ? 1 : -1;
-    const animate = () => {
-      if ((dir === 1 && pos >= final) || (dir === -1 && pos <= final)) {
+    // Animate dice to the rolled number (single smooth animation)
+    const start = dicePos;
+    const distance = final - start;
+    const duration = 400;
+    const startTime = performance.now();
+
+    function animate(now: number) {
+      const elapsed = now - startTime;
+      if (elapsed >= duration) {
         setDicePos(final);
         cb();
         return;
       }
-      pos += dir * 1.5;
-      setDicePos(pos);
+      const progress = elapsed / duration;
+      setDicePos(start + distance * progress);
       requestAnimationFrame(animate);
-    };
-    animate();
+    }
+    requestAnimationFrame(animate);
   };
 
   const rollDice = async () => {
@@ -128,7 +107,6 @@ const Dice = () => {
       return;
     }
     setIsRolling(true);
-    setIsDiceAnimating(false);
     // Deduct bet amount
     updateBalance(-betAmount);
 
@@ -170,7 +148,7 @@ const Dice = () => {
   const resetGame = () => {
     setLastRoll(null);
     setLastResult(null);
-    setIsDiceAnimating(true);
+    setDicePos(rollTarget);
   };
 
   // --- UI ---
@@ -229,21 +207,81 @@ const Dice = () => {
                   <span className="text-xs text-muted-foreground">50</span>
                   <span className="text-xs text-muted-foreground">99</span>
                 </div>
-                {/* Dice Animation */}
+                {/* Draggable Target Square */}
                 <div
                   className="absolute top-1/2 -translate-y-1/2 z-20 transition-transform"
                   style={{
-                    left: `calc(${getPercent(dicePos)}% - 24px)`,
-                    transition: isRolling ? 'left 0.4s cubic-bezier(.4,2,.6,1)' : 'left 0.2s',
+                    left: `calc(${getPercent(rollTarget)}% - 24px)`,
+                    transition: isRolling ? 'none' : 'left 0.2s',
+                    cursor: isRolling ? 'not-allowed' : 'grab'
+                  }}
+                  tabIndex={0}
+                  aria-label="Target Number"
+                  role="slider"
+                  aria-valuenow={rollTarget}
+                  aria-valuemin={SLIDER_MIN}
+                  aria-valuemax={SLIDER_MAX}
+                  onKeyDown={e => {
+                    if (isRolling) return;
+                    if (e.key === 'ArrowLeft' && rollTarget > SLIDER_MIN) setRollTarget(rollTarget - 1);
+                    if (e.key === 'ArrowRight' && rollTarget < SLIDER_MAX) setRollTarget(rollTarget + 1);
+                  }}
+                  onMouseDown={e => {
+                    if (isRolling) return;
+                    const slider = e.currentTarget.parentElement!;
+                    const onMove = (moveEvent: MouseEvent) => {
+                      const rect = slider.getBoundingClientRect();
+                      let percent = (moveEvent.clientX - rect.left) / rect.width;
+                      percent = Math.max(0, Math.min(1, percent));
+                      const value = Math.round(SLIDER_MIN + percent * (SLIDER_MAX - SLIDER_MIN));
+                      setRollTarget(value);
+                    };
+                    const onUp = () => {
+                      window.removeEventListener('mousemove', onMove);
+                      window.removeEventListener('mouseup', onUp);
+                    };
+                    window.addEventListener('mousemove', onMove);
+                    window.addEventListener('mouseup', onUp);
+                  }}
+                  onTouchStart={e => {
+                    if (isRolling) return;
+                    const slider = e.currentTarget.parentElement!;
+                    const onMove = (moveEvent: TouchEvent) => {
+                      const rect = slider.getBoundingClientRect();
+                      let percent = (moveEvent.touches[0].clientX - rect.left) / rect.width;
+                      percent = Math.max(0, Math.min(1, percent));
+                      const value = Math.round(SLIDER_MIN + percent * (SLIDER_MAX - SLIDER_MIN));
+                      setRollTarget(value);
+                    };
+                    const onUp = () => {
+                      window.removeEventListener('touchmove', onMove);
+                      window.removeEventListener('touchend', onUp);
+                    };
+                    window.addEventListener('touchmove', onMove);
+                    window.addEventListener('touchend', onUp);
                   }}
                 >
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-background to-secondary border-2 border-neon-blue flex items-center justify-center shadow-lg">
-                    <Dices className="w-8 h-8 text-neon-blue" />
-                  </div>
-                  <div className="absolute left-1/2 -translate-x-1/2 top-14 text-xs text-muted-foreground font-bold">
-                    {Math.round(dicePos)}
+                    <span className="text-xl font-bold text-primary">{rollTarget}</span>
                   </div>
                 </div>
+                {/* Dice Animation (only after rolling) */}
+                {isRolling || lastRoll !== null ? (
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 z-30 transition-transform pointer-events-none"
+                    style={{
+                      left: `calc(${getPercent(dicePos)}% - 24px)`,
+                      transition: 'left 0.4s cubic-bezier(.4,2,.6,1)'
+                    }}
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-background to-secondary border-2 border-neon-blue flex items-center justify-center shadow-lg">
+                      <Dices className="w-8 h-8 text-neon-blue" />
+                    </div>
+                    <div className="absolute left-1/2 -translate-x-1/2 top-14 text-xs text-muted-foreground font-bold">
+                      {Math.round(dicePos)}
+                    </div>
+                  </div>
+                ) : null}
                 {/* Slider Input (hidden, but accessible for a11y) */}
                 <input
                   type="range"
