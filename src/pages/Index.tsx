@@ -26,6 +26,7 @@ import crashLogo from '@/assets/crash-logo.png';
 import diceLogo from '@/assets/dice-logo.png';
 import minesLogo from '@/assets/mines-logo.png';
 import plinkoLogo from '@/assets/plinko-logo.png';
+import crossyroadLogo from '@/assets/crossyroad-logo.png';
 
 const stakeOriginals = [
   {
@@ -52,6 +53,11 @@ const stakeOriginals = [
     name: 'Plinko',
     logo: plinkoLogo,
     path: '/games/plinko'
+  },
+  {
+    name: 'Crossy Road',
+    logo: crossyroadLogo,
+    path: '/games/crossyroad'
   }
 ];
 
