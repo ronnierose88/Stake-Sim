@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import blackjackLogo from '@/assets/blackjack-logo.png';
 import crashLogo from '@/assets/crash-logo.png';
+import crossyroadLogo from '@/assets/crossyroad-logo.png';
 import diceLogo from '@/assets/dice-logo.png';
 import minesLogo from '@/assets/mines-logo.png';
 import plinkoLogo from '@/assets/plinko-logo.png';
@@ -32,6 +33,11 @@ const stakeOriginals = [
     name: 'Blackjack',
     logo: blackjackLogo,
     path: '/games/blackjack'
+  },
+  {
+    name: 'Crossy Road',
+    logo: crossyroadLogo,
+    path '/games/crossyroad'
   },
   {
     name: 'Crash',
