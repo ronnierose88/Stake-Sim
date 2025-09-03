@@ -19,9 +19,7 @@ import {
   Zap,
   Landmark,
   ArrowUpRight,
-  Layers,
-  ChevronLeft,
-  ChevronRight
+  Layers
 } from 'lucide-react';
 import blackjackLogo from '@/assets/blackjack-logo.png';
 import crashLogo from '@/assets/crash-logo.png';
@@ -66,7 +64,6 @@ const stakeOriginals = [
 const Index = () => {
   const { user } = useUser();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [originalsIndex, setOriginalsIndex] = useState(0);
 
   const features = [
     {
@@ -96,52 +93,27 @@ const Index = () => {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl md:text-4xl font-bold">Stake Originals</h2>
         </div>
-        <div className="flex items-center justify-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-4"
-            disabled={originalsIndex === 0}
-            onClick={() => setOriginalsIndex(i => Math.max(0, i - 1))}
-          >
-            <ChevronLeft />
-          </Button>
-          <div
-            className="flex-shrink-0 flex flex-col items-center"
-            style={{ width: '260px' }}
-          >
-            <div className="w-[260px] h-[260px] flex items-center justify-center aspect-square">
+        <div className="overflow-x-auto">
+          <div className="flex gap-6 pb-2" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {stakeOriginals.map((game, idx) => (
               <Link
-                to={stakeOriginals[originalsIndex].path}
-                className="w-full h-full block"
+                to={game.path}
+                key={game.name}
+                className="min-w-[260px] max-w-xs flex-shrink-0 group"
+                style={{ animationDelay: `${idx * 100}ms` }}
               >
-                <img
-                  src={stakeOriginals[originalsIndex].logo}
-                  alt={`${stakeOriginals[originalsIndex].name} Logo`}
-                  className="w-full h-full object-contain"
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                />
+                <Card className="relative bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon-green hover:scale-105 animate-slide-up group h-full overflow-hidden flex flex-col items-center justify-center min-h-[260px]">
+                  {/* Only the logo, centered */}
+                  <img
+                    src={game.logo}
+                    alt={`${game.name} Logo`}
+                    className="w-32 h-32 object-contain"
+                    style={{ margin: 'auto' }}
+                  />
+                </Card>
               </Link>
-            </div>
-            <Button
-              as={Link}
-              to={stakeOriginals[originalsIndex].path}
-              className="mt-2 w-[260px] h-[56px] text-lg font-semibold"
-              style={{ minWidth: '260px', minHeight: '56px' }}
-              variant="secondary"
-            >
-              {stakeOriginals[originalsIndex].name}
-            </Button>
+            ))}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="ml-4"
-            disabled={originalsIndex === stakeOriginals.length - 1}
-            onClick={() => setOriginalsIndex(i => Math.min(stakeOriginals.length - 1, i + 1))}
-          >
-            <ChevronRight />
-          </Button>
         </div>
       </section>
 
