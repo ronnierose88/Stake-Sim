@@ -98,21 +98,31 @@ const Index = () => {
             {stakeOriginals.map((game, idx) => (
               <div
                 key={game.name}
-                className="min-w-[260px] max-w-xs flex-shrink-0 flex items-center justify-center min-h-[260px] aspect-square"
-                style={{ animationDelay: `${idx * 100}ms` }}
+                className="flex-shrink-0 flex flex-col items-center"
+                style={{ animationDelay: `${idx * 100}ms`, width: '260px' }}
               >
-                {/* Only the logo is clickable */}
-                <Link
+                <div className="w-[260px] h-[260px] flex items-center justify-center aspect-square">
+                  <Link
+                    to={game.path}
+                    className="w-full h-full block"
+                  >
+                    <img
+                      src={game.logo}
+                      alt={`${game.name} Logo`}
+                      className="w-full h-full object-contain"
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
+                  </Link>
+                </div>
+                <Button
+                  as={Link}
                   to={game.path}
-                  className="w-full h-full block"
+                  className="mt-2 w-[260px] h-[56px] text-lg font-semibold"
+                  style={{ minWidth: '260px', minHeight: '56px' }}
+                  variant="secondary"
                 >
-                  <img
-                    src={game.logo}
-                    alt={`${game.name} Logo`}
-                    className="w-full h-full object-contain"
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                  />
-                </Link>
+                  {game.name}
+                </Button>
               </div>
             ))}
           </div>
