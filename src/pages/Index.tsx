@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useUser } from '@/contexts/UserContext';
 import { LoginDialog } from '@/components/LoginDialog';
 import { useState } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
 import casinoHero from '@/assets/casino-hero.jpg';
 import stakeLogo from '@/assets/stake-logo.png';
 import { 
@@ -20,7 +19,9 @@ import {
   Zap,
   Landmark,
   ArrowUpRight,
-  Layers
+  Layers,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import blackjackLogo from '@/assets/blackjack-logo.png';
 import crashLogo from '@/assets/crash-logo.png';
@@ -85,14 +86,6 @@ const Index = () => {
     }
   ];
 
-  const handlePrev = () => {
-    setOriginalsIndex((prev) => (prev > 0 ? prev - 1 : prev));
-  };
-
-  const handleNext = () => {
-    setOriginalsIndex((prev) => (prev < stakeOriginals.length - 1 ? prev + 1 : prev));
-  };
-
   return (
     <div
       className="container mx-auto px-4 py-8"
@@ -103,15 +96,15 @@ const Index = () => {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl md:text-4xl font-bold">Stake Originals</h2>
         </div>
-        <div className="flex flex-col items-center">
-          <Button 
-            onClick={handlePrev} 
-            disabled={originalsIndex === 0}
+        <div className="flex items-center justify-center">
+          <Button
             variant="ghost"
-            className="mb-2"
-            aria-label="Previous Game"
+            size="icon"
+            className="mr-4"
+            disabled={originalsIndex === 0}
+            onClick={() => setOriginalsIndex(i => Math.max(0, i - 1))}
           >
-            <ChevronUp size={32} />
+            <ChevronLeft />
           </Button>
           <div
             className="flex-shrink-0 flex flex-col items-center"
@@ -140,14 +133,14 @@ const Index = () => {
               {stakeOriginals[originalsIndex].name}
             </Button>
           </div>
-          <Button 
-            onClick={handleNext} 
-            disabled={originalsIndex === stakeOriginals.length - 1}
+          <Button
             variant="ghost"
-            className="mt-2"
-            aria-label="Next Game"
+            size="icon"
+            className="ml-4"
+            disabled={originalsIndex === stakeOriginals.length - 1}
+            onClick={() => setOriginalsIndex(i => Math.min(stakeOriginals.length - 1, i + 1))}
           >
-            <ChevronDown size={32} />
+            <ChevronRight />
           </Button>
         </div>
       </section>
