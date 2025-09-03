@@ -48,7 +48,7 @@ const App = () => (
             <footer className="border-t border-border bg-card mt-auto py-6">
               <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
                 <p>⚠️ This is a fake-money simulation. No real gambling. ⚠️</p>
-                <p className="mt-1">StakeSim - Virtual Casino Experience</p>
+                <p className="mt-1">Stake: Online Casino - Play & Bet Online</p>
               </div>
             </footer>
           </BrowserRouter>
