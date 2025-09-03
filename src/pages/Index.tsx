@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useUser } from '@/contexts/UserContext';
 import { LoginDialog } from '@/components/LoginDialog';
 import { useState } from 'react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import casinoHero from '@/assets/casino-hero.jpg';
 import stakeLogo from '@/assets/stake-logo.png';
 import { 
@@ -64,6 +65,7 @@ const stakeOriginals = [
 const Index = () => {
   const { user } = useUser();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [originalsIndex, setOriginalsIndex] = useState(0);
 
   const features = [
     {
@@ -83,6 +85,14 @@ const Index = () => {
     }
   ];
 
+  const handlePrev = () => {
+    setOriginalsIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  };
+
+  const handleNext = () => {
+    setOriginalsIndex((prev) => (prev < stakeOriginals.length - 1 ? prev + 1 : prev));
+  };
+
   return (
     <div
       className="container mx-auto px-4 py-8"
@@ -93,39 +103,52 @@ const Index = () => {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl md:text-4xl font-bold">Stake Originals</h2>
         </div>
-        <div className="overflow-x-auto">
-          <div className="flex gap-6 pb-2" style={{ WebkitOverflowScrolling: 'touch' }}>
-            {stakeOriginals.map((game, idx) => (
-              <div
-                key={game.name}
-                className="flex-shrink-0 flex flex-col items-center"
-                style={{ animationDelay: `${idx * 100}ms`, width: '260px' }}
+        <div className="flex flex-col items-center">
+          <Button 
+            onClick={handlePrev} 
+            disabled={originalsIndex === 0}
+            variant="ghost"
+            className="mb-2"
+            aria-label="Previous Game"
+          >
+            <ChevronUp size={32} />
+          </Button>
+          <div
+            className="flex-shrink-0 flex flex-col items-center"
+            style={{ width: '260px' }}
+          >
+            <div className="w-[260px] h-[260px] flex items-center justify-center aspect-square">
+              <Link
+                to={stakeOriginals[originalsIndex].path}
+                className="w-full h-full block"
               >
-                <div className="w-[260px] h-[260px] flex items-center justify-center aspect-square">
-                  <Link
-                    to={game.path}
-                    className="w-full h-full block"
-                  >
-                    <img
-                      src={game.logo}
-                      alt={`${game.name} Logo`}
-                      className="w-full h-full object-contain"
-                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                    />
-                  </Link>
-                </div>
-                <Button
-                  as={Link}
-                  to={game.path}
-                  className="mt-2 w-[260px] h-[56px] text-lg font-semibold"
-                  style={{ minWidth: '260px', minHeight: '56px' }}
-                  variant="secondary"
-                >
-                  {game.name}
-                </Button>
-              </div>
-            ))}
+                <img
+                  src={stakeOriginals[originalsIndex].logo}
+                  alt={`${stakeOriginals[originalsIndex].name} Logo`}
+                  className="w-full h-full object-contain"
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+              </Link>
+            </div>
+            <Button
+              as={Link}
+              to={stakeOriginals[originalsIndex].path}
+              className="mt-2 w-[260px] h-[56px] text-lg font-semibold"
+              style={{ minWidth: '260px', minHeight: '56px' }}
+              variant="secondary"
+            >
+              {stakeOriginals[originalsIndex].name}
+            </Button>
           </div>
+          <Button 
+            onClick={handleNext} 
+            disabled={originalsIndex === stakeOriginals.length - 1}
+            variant="ghost"
+            className="mt-2"
+            aria-label="Next Game"
+          >
+            <ChevronDown size={32} />
+          </Button>
         </div>
       </section>
 
