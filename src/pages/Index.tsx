@@ -37,7 +37,7 @@ const stakeOriginals = [
   {
     name: 'Crossy Road',
     logo: crossyroadLogo,
-    path: '/games/crossyroad'
+    path: '/games/crossy-road'
   },
   {
     name: 'Crash',
