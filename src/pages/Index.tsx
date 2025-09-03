@@ -96,20 +96,24 @@ const Index = () => {
         <div className="overflow-x-auto">
           <div className="flex gap-6 pb-2" style={{ WebkitOverflowScrolling: 'touch' }}>
             {stakeOriginals.map((game, idx) => (
-              <Link
-                to={game.path}
+              <div
                 key={game.name}
-                className="min-w-[260px] max-w-xs flex-shrink-0 group flex items-center justify-center min-h-[260px] aspect-square"
+                className="min-w-[260px] max-w-xs flex-shrink-0 flex items-center justify-center min-h-[260px] aspect-square"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
-                {/* Only the logo, no background box */}
-                <img
-                  src={game.logo}
-                  alt={`${game.name} Logo`}
-                  className="w-full h-full object-contain"
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                />
-              </Link>
+                {/* Only the logo is clickable */}
+                <Link
+                  to={game.path}
+                  className="w-full h-full block"
+                >
+                  <img
+                    src={game.logo}
+                    alt={`${game.name} Logo`}
+                    className="w-full h-full object-contain"
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  />
+                </Link>
+              </div>
             ))}
           </div>
         </div>
