@@ -5,10 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Zap, AlertTriangle, Target } from 'lucide-react';
+import { AlertTriangle, Target } from 'lucide-react';
 
 type RiskLevel = 'low' | 'medium' | 'high';
-type GameState = 'idle' | 'dropping' | 'finished';
 type RowCount = 8 | 12 | 16 | 20;
 
 interface Ball {
@@ -19,7 +18,6 @@ interface Ball {
   id: number;
 }
 
-// Update multipliers as per new requirements
 const PAYOUTS: Record<RiskLevel, Record<RowCount, number[]>> = {
   low: {
     8:  [5, 2, 1.5, 1.2, 1.1, 1.2, 1.5, 2, 5],
@@ -73,24 +71,21 @@ export default function Plinko() {
   const [betAmount, setBetAmount] = useState(10);
   const [riskLevel, setRiskLevel] = useState<RiskLevel>('medium');
   const [rowCount, setRowCount] = useState<RowCount>(12);
-  const [gameState, setGameState] = useState<GameState>('idle');
-  const [ball, setBall] = useState<Ball | null>(null);
-  const [lastWin, setLastWin] = useState<{ slot: number; multiplier: number; amount: number } | null>(null);
+  const [balls, setBalls] = useState<Ball[]>([]);
   const [gameHistory, setGameHistory] = useState<{ multiplier: number; amount: number }[]>([]);
-  
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
 
-  // Get current multipliers based on risk level and row count
   const currentMultipliers = PAYOUTS[riskLevel][rowCount];
   const slotCount = currentMultipliers.length;
 
   const getSlotColor = (index: number): string => {
     const multiplier = currentMultipliers[index];
-    if (multiplier >= 10) return '#ef4444'; // red for very high payouts
-    if (multiplier >= 3) return '#f59e0b'; // yellow for high payouts
-    if (multiplier >= 1) return '#10b981'; // green for profit
-    return '#6b7280'; // gray for loss
+    if (multiplier >= 10) return '#ef4444';
+    if (multiplier >= 3) return '#f59e0b';
+    if (multiplier >= 1) return '#10b981';
+    return '#6b7280';
   };
 
   const drawBoard = () => {
@@ -102,84 +97,62 @@ export default function Plinko() {
     const pegSpacingY = (canvas.height - 100) / rowCount;
     const pegRadius = 4;
 
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw pegs
     ctx.fillStyle = '#4b5563';
     for (let row = 0; row < rowCount; row++) {
       const pegsInRow = row + 2;
       const startX = (canvas.width - (pegsInRow - 1) * pegSpacingX) / 2;
-      
       for (let peg = 0; peg < pegsInRow; peg++) {
         const pegX = startX + peg * pegSpacingX;
         const pegY = 50 + row * pegSpacingY;
-        
         ctx.beginPath();
         ctx.arc(pegX, pegY, pegRadius, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
-    // Draw slots at bottom
     const slotWidth = canvas.width / slotCount;
     for (let i = 0; i < slotCount; i++) {
       const x = i * slotWidth;
       const y = canvas.height - 50;
-      
       ctx.fillStyle = getSlotColor(i);
       ctx.fillRect(x, y, slotWidth - 2, 30);
-      
       ctx.fillStyle = '#ffffff';
       ctx.font = '10px monospace';
       ctx.textAlign = 'center';
-      const multiplier = currentMultipliers[i];
-      ctx.fillText(
-        `${multiplier}x`,
-        x + slotWidth / 2,
-        y + 20
-      );
+      ctx.fillText(`${currentMultipliers[i]}x`, x + slotWidth / 2, y + 20);
     }
   };
 
-  // Draw board whenever settings change
-  useEffect(() => {
-    drawBoard();
-  }, [riskLevel, rowCount]);
-
   const dropBall = () => {
-    if (!user || gameState !== 'idle') return;
-    
+    if (!user) return;
     if (betAmount <= 0 || betAmount > user.balance) {
       toast.error('Invalid bet amount');
       return;
     }
 
-    // Deduct bet amount
     updateBalance(-betAmount);
-    setGameState('dropping');
-    setLastWin(null);
-
-    // Initialize ball at the top center
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ballData: Ball = {
+    const newBall: Ball = {
       x: canvas.width / 2,
       y: 20,
       vx: (Math.random() - 0.5) * 2,
       vy: 0,
-      id: Date.now()
+      id: Date.now() + Math.random()
     };
 
-    setBall(ballData);
-    animateBall(ballData);
+    setBalls(prev => [...prev, newBall]);
   };
 
-  const animateBall = (ballData: Ball) => {
+  const animate = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
+
+    drawBoard();
 
     const pegSpacingX = canvas.width / (rowCount + 1);
     const pegSpacingY = (canvas.height - 100) / rowCount;
@@ -188,108 +161,77 @@ export default function Plinko() {
     const pegRadius = 4;
     const ballRadius = 6;
 
-    const animate = () => {
-      // Redraw board
-      drawBoard();
+    setBalls(prevBalls => {
+      const updatedBalls: Ball[] = [];
 
-      // Update ball physics
-      ballData.vy += gravity;
-      ballData.x += ballData.vx;
-      ballData.y += ballData.vy;
+      prevBalls.forEach(ballData => {
+        ballData.vy += gravity;
+        ballData.x += ballData.vx;
+        ballData.y += ballData.vy;
 
-      // Check collision with pegs
-      for (let row = 0; row < rowCount; row++) {
-        const pegsInRow = row + 2;
-        const startX = (canvas.width - (pegsInRow - 1) * pegSpacingX) / 2;
-        
-        for (let peg = 0; peg < pegsInRow; peg++) {
-          const pegX = startX + peg * pegSpacingX;
-          const pegY = 50 + row * pegSpacingY;
-          
-          const dx = ballData.x - pegX;
-          const dy = ballData.y - pegY;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          if (distance < pegRadius + ballRadius) {
-            // Collision detected
-            const angle = Math.atan2(dy, dx);
-            ballData.x = pegX + Math.cos(angle) * (pegRadius + ballRadius);
-            ballData.y = pegY + Math.sin(angle) * (pegRadius + ballRadius);
-            
-            // Bounce with some randomness
-            ballData.vx = Math.cos(angle) * bounce + (Math.random() - 0.5) * 2;
-            ballData.vy = Math.sin(angle) * bounce * 0.5;
+        for (let row = 0; row < rowCount; row++) {
+          const pegsInRow = row + 2;
+          const startX = (canvas.width - (pegsInRow - 1) * pegSpacingX) / 2;
+          for (let peg = 0; peg < pegsInRow; peg++) {
+            const pegX = startX + peg * pegSpacingX;
+            const pegY = 50 + row * pegSpacingY;
+            const dx = ballData.x - pegX;
+            const dy = ballData.y - pegY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < pegRadius + ballRadius) {
+              const angle = Math.atan2(dy, dx);
+              ballData.x = pegX + Math.cos(angle) * (pegRadius + ballRadius);
+              ballData.y = pegY + Math.sin(angle) * (pegRadius + ballRadius);
+              ballData.vx = Math.cos(angle) * bounce + (Math.random() - 0.5) * 2;
+              ballData.vy = Math.sin(angle) * bounce * 0.5;
+            }
           }
         }
-      }
 
-      // Draw ball
-      ctx.fillStyle = '#fbbf24';
-      ctx.beginPath();
-      ctx.arc(ballData.x, ballData.y, ballRadius, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.arc(ballData.x, ballData.y, ballRadius, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Check if ball reached bottom
-      if (ballData.y > canvas.height - 60) {
-        const slotWidth = canvas.width / slotCount;
-        const slotIndex = Math.floor(ballData.x / slotWidth);
-        const finalSlot = Math.max(0, Math.min(slotCount - 1, slotIndex));
-        const multiplier = currentMultipliers[finalSlot];
-        const winAmount = betAmount * multiplier;
-        
-        // Update balance and history
-        updateBalance(winAmount);
-        
-        const result = multiplier >= 1 ? 'win' : 'loss';
-        setLastWin({ slot: finalSlot, multiplier, amount: winAmount });
-        setGameHistory(prev => [{ multiplier, amount: winAmount }, ...prev.slice(0, 9)]);
-        
-        addBetHistory({
-          game: 'Plinko',
-          betAmount,
-          result,
-          payout: winAmount
-        });
+        if (ballData.y > canvas.height - 60) {
+          const slotWidth = canvas.width / slotCount;
+          const slotIndex = Math.floor(ballData.x / slotWidth);
+          const finalSlot = Math.max(0, Math.min(slotCount - 1, slotIndex));
+          const multiplier = currentMultipliers[finalSlot];
+          const winAmount = betAmount * multiplier;
 
-        if (result === 'win') {
-          toast.success(`Won ${multiplier}x! Received $${winAmount.toFixed(2)}`);
+          updateBalance(winAmount);
+          setGameHistory(prev => [{ multiplier, amount: winAmount }, ...prev.slice(0, 9)]);
+          addBetHistory({
+            game: 'Plinko',
+            betAmount,
+            result: multiplier >= 1 ? 'win' : 'loss',
+            payout: winAmount
+          });
+
+          if (multiplier >= 1) {
+            toast.success(`Won ${multiplier}x! Received $${winAmount.toFixed(2)}`);
+          } else {
+            toast.error(`Hit ${multiplier}x slot. Lost $${betAmount.toFixed(2)}`);
+          }
         } else {
-          toast.error(`Hit ${multiplier}x slot. Lost $${betAmount.toFixed(2)}`);
+          updatedBalls.push(ballData);
         }
+      });
 
-        setGameState('finished');
-        setBall(null);
-        
-        setTimeout(() => {
-          setGameState('idle');
-        }, 2000);
-        
-        return;
-      }
+      return updatedBalls;
+    });
 
-      // Keep ball in bounds
-      if (ballData.x < ballRadius) {
-        ballData.x = ballRadius;
-        ballData.vx = Math.abs(ballData.vx);
-      }
-      if (ballData.x > canvas.width - ballRadius) {
-        ballData.x = canvas.width - ballRadius;
-        ballData.vx = -Math.abs(ballData.vx);
-      }
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
+    animationRef.current = requestAnimationFrame(animate);
   };
 
   useEffect(() => {
+    animationRef.current = requestAnimationFrame(animate);
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, []);
+  }, [riskLevel, rowCount]);
 
   if (!user) {
     return (
@@ -312,9 +254,7 @@ export default function Plinko() {
           <Target className="w-8 h-8 inline mr-2" />
           Plinko
         </h1>
-        <p className="text-muted-foreground">
-          Drop the ball and watch it bounce through the pegs to win big!
-        </p>
+        <p className="text-muted-foreground">Drop the ball and watch it bounce through the pegs to win big!</p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -324,31 +264,16 @@ export default function Plinko() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Plinko Board ({rowCount} Rows)</span>
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm font-bold ${RISK_COLORS[riskLevel]}`}>
-                    {riskLevel.toUpperCase()} RISK
-                  </span>
-                </div>
+                <span className={`text-sm font-bold ${RISK_COLORS[riskLevel]}`}>{riskLevel.toUpperCase()} RISK</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <canvas 
+              <canvas
                 ref={canvasRef}
                 width={500}
                 height={400}
                 className="w-full h-auto border border-border rounded-lg bg-black/20"
               />
-              
-              {lastWin && (
-                <div className="mt-4 text-center">
-                  <div className="text-lg font-bold">
-                    🎯 Landed in slot {lastWin.slot + 1} - {lastWin.multiplier}x multiplier!
-                  </div>
-                  <div className={`text-xl font-bold ${lastWin.multiplier >= 1 ? 'text-green-400' : 'text-red-400'}`}>
-                    {lastWin.multiplier >= 1 ? '+' : ''} ${lastWin.amount.toFixed(2)}
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>
@@ -368,14 +293,13 @@ export default function Plinko() {
                   max={user.balance}
                   value={betAmount}
                   onChange={(e) => setBetAmount(Number(e.target.value))}
-                  disabled={gameState !== 'idle'}
                   className="bg-background"
                 />
               </div>
 
               <div>
                 <label className="text-sm font-medium mb-2 block">Rows</label>
-                <Select value={rowCount.toString()} onValueChange={(value) => setRowCount(Number(value) as RowCount)} disabled={gameState !== 'idle'}>
+                <Select value={rowCount.toString()} onValueChange={(value) => setRowCount(Number(value) as RowCount)}>
                   <SelectTrigger className="bg-background">
                     <SelectValue />
                   </SelectTrigger>
@@ -390,7 +314,7 @@ export default function Plinko() {
 
               <div>
                 <label className="text-sm font-medium mb-2 block">Risk Level</label>
-                <Select value={riskLevel} onValueChange={(value: RiskLevel) => setRiskLevel(value)} disabled={gameState !== 'idle'}>
+                <Select value={riskLevel} onValueChange={(value: RiskLevel) => setRiskLevel(value)}>
                   <SelectTrigger className="bg-background">
                     <SelectValue />
                   </SelectTrigger>
@@ -403,41 +327,19 @@ export default function Plinko() {
               </div>
 
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setBetAmount(Math.floor(betAmount / 2))}
-                  disabled={gameState !== 'idle'}
-                >
+                <Button variant="outline" size="sm" onClick={() => setBetAmount(Math.floor(betAmount / 2))}>
                   1/2
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setBetAmount(Math.min(user.balance, betAmount * 2))}
-                  disabled={gameState !== 'idle'}
-                >
+                <Button variant="outline" size="sm" onClick={() => setBetAmount(Math.min(user.balance, betAmount * 2))}>
                   2x
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setBetAmount(user.balance)}
-                  disabled={gameState !== 'idle'}
-                >
+                <Button variant="outline" size="sm" onClick={() => setBetAmount(user.balance)}>
                   Max
                 </Button>
               </div>
 
-              <Button 
-                variant="casino" 
-                className="w-full" 
-                onClick={dropBall}
-                disabled={gameState !== 'idle' || betAmount <= 0 || betAmount > user.balance}
-              >
-                {gameState === 'dropping' ? 'Ball Dropping...' : 
-                 gameState === 'finished' ? 'Finishing...' :
-                 `Drop Ball - $${betAmount.toFixed(2)}`}
+              <Button variant="casino" className="w-full" onClick={dropBall} disabled={betAmount <= 0 || betAmount > user.balance}>
+                Drop Ball - ${betAmount.toFixed(2)}
               </Button>
 
               <div className="text-center p-3 bg-gradient-accent rounded-lg">
