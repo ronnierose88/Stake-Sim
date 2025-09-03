@@ -99,16 +99,18 @@ const Index = () => {
               <Link
                 to={game.path}
                 key={game.name}
-                className="min-w-[260px] max-w-xs flex-shrink-0 group"
+                className="min-w-[120px] max-w-[120px] flex-shrink-0 group"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
-                <Card className="relative bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon-green hover:scale-105 animate-slide-up group h-full overflow-hidden flex flex-col items-center justify-center min-h-[260px]">
-                  {/* Only the logo, centered */}
+                <Card className="relative bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon-green hover:scale-105 animate-slide-up group h-full overflow-hidden flex flex-col items-center justify-center min-h-[120px] max-h-[120px]">
+                  {/* Logo, fit to box, lower resolution */}
                   <img
                     src={game.logo}
+                    srcSet={`${game.logo}?w=64 1x, ${game.logo}?w=120 2x`}
                     alt={`${game.name} Logo`}
-                    className="w-32 h-32 object-contain"
-                    style={{ margin: 'auto' }}
+                    className="w-16 h-16 object-contain"
+                    loading="lazy"
+                    style={{ margin: 'auto', width: '64px', height: '64px', objectFit: 'contain' }}
                   />
                 </Card>
               </Link>
