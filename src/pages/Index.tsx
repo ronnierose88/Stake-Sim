@@ -114,9 +114,9 @@ const Index = () => {
       {/* Features Section */}
       <section className="mb-16">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-4">Why StakeSim?</h2>
+          <h2 className="text-3xl font-bold mb-4">Why Stake?</h2>
           <p className="text-lg text-muted-foreground">
-            Safe, fun, and completely risk-free gaming experience
+            Fair, and fun gaming experience
           </p>
         </div>
 
