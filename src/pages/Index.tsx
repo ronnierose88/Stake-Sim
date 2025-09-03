@@ -55,10 +55,10 @@ const stakeOriginals = [
     path: '/games/plinko'
   },
   {
-    name: 'Crossy Road',
+    name: 'CrossyRoad',
     logo: crossyroadLogo,
     path: '/games/crossyroad'
-  }
+  } 
 ];
 
 const Index = () => {
