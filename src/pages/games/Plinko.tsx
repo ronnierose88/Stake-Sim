@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { AlertTriangle, Target } from 'lucide-react';
 
 type RiskLevel = 'low' | 'medium' | 'high';
-type RowCount = 8 | 12 | 16 | 20;
+type RowCount = 8 | 12 | 16; // Removed 20 as an option
 
 interface Ball {
   x: number;
@@ -23,20 +23,17 @@ const PAYOUTS: Record<RiskLevel, Record<RowCount, number[]>> = {
   low: {
     8:  [5, 2, 1.5, 1.2, 1.1, 1.2, 1.5, 2, 5],
     12: [7, 3, 2, 1.5, 1.2, 1.1, 1.1, 1.2, 1.5, 2, 3, 7],
-    16: [10, 4, 3, 2, 1.5, 1.2, 1.1, 1.05, 1.05, 1.1, 1.2, 1.5, 2, 3, 4, 10],
-    20: [15, 6, 4, 3, 2, 1.5, 1.2, 1.1, 1.05, 1.02, 1.02, 1.05, 1.1, 1.2, 1.5, 2, 3, 4, 6, 15]
+    16: [10, 4, 3, 2, 1.5, 1.2, 1.1, 1.05, 1.05, 1.1, 1.2, 1.5, 2, 3, 4, 10]
   },
   medium: {
     8:  [15, 5, 2, 1.2, 0.8, 1.2, 2, 5, 15],
     12: [25, 10, 5, 2, 1.2, 0.9, 0.9, 1.2, 2, 5, 10, 25],
-    16: [50, 15, 8, 4, 2, 1.2, 0.8, 0.6, 0.6, 0.8, 1.2, 2, 4, 8, 15, 50],
-    20: [100, 25, 12, 6, 3, 2, 1.2, 0.9, 0.7, 0.5, 0.5, 0.7, 0.9, 1.2, 2, 3, 6, 12, 25, 100]
+    16: [50, 15, 8, 4, 2, 1.2, 0.8, 0.6, 0.6, 0.8, 1.2, 2, 4, 8, 15, 50]
   },
   high: {
     8:  [30, 10, 3, 1.2, 0.4, 1.2, 3, 10, 30],
     12: [75, 20, 10, 4, 2, 0.5, 0.5, 2, 4, 10, 20, 75],
-    16: [200, 40, 20, 8, 3, 1.5, 0.3, 0.2, 0.2, 0.3, 1.5, 3, 8, 20, 40, 200],
-    20: [500, 100, 40, 15, 8, 4, 2, 1, 0.4, 0.2, 0.2, 0.4, 1, 2, 4, 8, 15, 40, 100, 500]
+    16: [200, 40, 20, 8, 3, 1.5, 0.3, 0.2, 0.2, 0.3, 1.5, 3, 8, 20, 40, 200]
   }
 };
 
@@ -50,20 +47,17 @@ const RISK_DESCRIPTIONS: Record<RiskLevel, Record<RowCount, string>> = {
   low: {
     8: 'Low Risk (1x - 2x)',
     12: 'Low Risk (1x - 3x)',
-    16: 'Low Risk (1x - 4x)',
-    20: 'Low Risk (1x - 5x)'
+    16: 'Low Risk (1x - 4x)'
   },
   medium: {
     8: 'Medium Risk (1x - 10x)',
     12: 'Medium Risk (0.5x - 15x)',
-    16: 'Medium Risk (1x - 20x)',
-    20: 'Medium Risk (1x - 30x)'
+    16: 'Medium Risk (1x - 20x)'
   },
   high: {
     8: 'High Risk (0.5x - 50x)',
     12: 'High Risk (0.5x - 100x)',
-    16: 'High Risk (0.5x - 250x)',
-    20: 'High Risk (0.5x - 500x)'
+    16: 'High Risk (0.5x - 250x)'
   }
 };
 
@@ -313,7 +307,6 @@ export default function Plinko() {
                     <SelectItem value="8">8 Rows</SelectItem>
                     <SelectItem value="12">12 Rows</SelectItem>
                     <SelectItem value="16">16 Rows</SelectItem>
-                    <SelectItem value="20">20 Rows</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
