@@ -155,10 +155,10 @@ export default function Plinko() {
 
     const pegSpacingX = canvas.width / (rowCount + 1);
     const pegSpacingY = (canvas.height - 100) / rowCount;
-    const gravity = 0.5; // Increased gravity to make balls faster
-    const bounce = 1.2; // Increased bounce to make balls more bouncy
+    const gravity = 0.3;
+    const bounce = 0.7;
     const pegRadius = 4;
-    const ballRadius = Math.max(6, Math.min(pegSpacingY * 0.5, 10)); // Adjusted ball size to ensure it hits pegs on smaller rows
+    const ballRadius = Math.max(3, Math.min(pegSpacingY * 0.35, 6));
 
     setBalls(prevBalls => {
       const updatedBalls: Ball[] = [];
@@ -182,10 +182,7 @@ export default function Plinko() {
               const angle = Math.atan2(dy, dx);
               ballData.x = pegX + Math.cos(angle) * (pegRadius + ballRadius);
               ballData.y = pegY + Math.sin(angle) * (pegRadius + ballRadius);
-
-              // Adjust ball direction to ensure a 50/50 chance at each peg
-              const randomDirection = Math.random() < 0.5 ? -1 : 1; // 50/50 chance
-              ballData.vx = randomDirection * Math.abs(ballData.vx); // Apply random direction
+              ballData.vx = Math.cos(angle) * bounce + (Math.random() - 0.5) * 2;
               ballData.vy = Math.sin(angle) * bounce * 0.5;
             }
           }
