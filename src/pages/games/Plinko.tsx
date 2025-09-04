@@ -127,13 +127,15 @@ export default function Plinko() {
 
   const dropBall = () => {
     if (!user) return;
-    const currentBetAmount = betAmount; // Capture the current bet amount at the time of the bet
 
+    // Ensure the bet amount is valid and within the user's balance
+    const currentBetAmount = parseFloat(betAmount.toFixed(2)); // Round to 2 decimal places
     if (currentBetAmount <= 0 || currentBetAmount > user.balance) {
       toast.error('Invalid bet amount');
       return;
     }
 
+    // Deduct the bet amount from the user's balance
     updateBalance(-currentBetAmount);
 
     const canvas = canvasRef.current;
@@ -162,7 +164,6 @@ export default function Plinko() {
     const gravity = 0.3;
     const bounce = 0.7;
     const pegRadius = 4;
-    // 🔥 Ball radius now scales with peg spacing
     const ballRadius = Math.max(3, Math.min(pegSpacingY * 0.35, 6));
 
     setBalls(prevBalls => {
@@ -203,7 +204,7 @@ export default function Plinko() {
           const slotIndex = Math.floor(ballData.x / slotWidth);
           const finalSlot = Math.max(0, Math.min(slotCount - 1, slotIndex));
           const multiplier = currentMultipliers[finalSlot];
-          const winAmount = currentBetAmount * multiplier; // Use the captured bet amount
+          const winAmount = parseFloat((currentBetAmount * multiplier).toFixed(2)); // Ensure accurate payout calculation
 
           updateBalance(winAmount);
           setGameHistory(prev => [{ multiplier, amount: winAmount }, ...prev.slice(0, 9)]);
