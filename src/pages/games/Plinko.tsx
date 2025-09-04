@@ -233,6 +233,10 @@ export default function Plinko() {
     };
   }, [riskLevel, rowCount]);
 
+  useEffect(() => {
+    drawBoard(); // Automatically draw the board when the component loads
+  }, [rowCount, riskLevel]);
+
   if (!user) {
     return (
       <div className="container mx-auto p-6 text-center">
