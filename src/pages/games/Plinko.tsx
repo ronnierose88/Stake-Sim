@@ -158,7 +158,7 @@ export default function Plinko() {
     const gravity = 0.5; // Increased gravity to make balls faster
     const bounce = 1.2; // Increased bounce to make balls more bouncy
     const pegRadius = 4;
-    const ballRadius = Math.max(6, Math.min(pegSpacingY * 0.5, 10)); // Adjusted ball size to ensure it hits pegs on smaller rows
+    const ballRadius = Math.max(3, Math.min(pegSpacingY * 0.3, 5)); // Reduced ball size
 
     setBalls(prevBalls => {
       const updatedBalls: Ball[] = [];
@@ -168,6 +168,7 @@ export default function Plinko() {
         ballData.x += ballData.vx;
         ballData.y += ballData.vy;
 
+        // Ensure the ball hits the center of the peg
         for (let row = 0; row < rowCount; row++) {
           const pegsInRow = row + 2;
           const startX = (canvas.width - (pegsInRow - 1) * pegSpacingX) / 2;
@@ -179,14 +180,11 @@ export default function Plinko() {
             const distance = Math.sqrt(dx * dx + dy * dy);
 
             if (distance < pegRadius + ballRadius) {
-              const angle = Math.atan2(dy, dx);
-              ballData.x = pegX + Math.cos(angle) * (pegRadius + ballRadius);
-              ballData.y = pegY + Math.sin(angle) * (pegRadius + ballRadius);
-
-              // Adjust ball direction to ensure a 50/50 chance at each peg
+              ballData.x = pegX; // Align ball to the center of the peg
+              ballData.y = pegY + pegRadius + ballRadius; // Move ball slightly below the peg
               const randomDirection = Math.random() < 0.5 ? -1 : 1; // 50/50 chance
               ballData.vx = randomDirection * Math.abs(ballData.vx); // Apply random direction
-              ballData.vy = Math.sin(angle) * bounce * 0.5;
+              ballData.vy = gravity; // Reset vertical velocity
             }
           }
         }
@@ -214,12 +212,10 @@ export default function Plinko() {
           });
 
           if (multiplier >= 1) {
-            toast.success(`Won ${multiplier}x! Received $${winAmount.toFixed(2)}`);
+            toast.success(`You won! Multiplier: ${multiplier}x`);
           } else {
-            toast.error(`Hit ${multiplier}x slot. Lost $${ballData.betAmount.toFixed(2)}`);
+            toast.error('You lost! Better luck next time.');
           }
-        } else {
-          updatedBalls.push(ballData);
         }
       });
 
@@ -230,155 +226,101 @@ export default function Plinko() {
   };
 
   useEffect(() => {
-    animationRef.current = requestAnimationFrame(animate);
+    drawBoard();
     return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
     };
-  }, [riskLevel, rowCount]);
-
-  useEffect(() => {
-    drawBoard(); // Automatically draw the board when the component loads
-  }, [rowCount, riskLevel]);
-
-  if (!user) {
-    return (
-      <div className="container mx-auto p-6 text-center">
-        <Card className="bg-gradient-card border-border max-w-md mx-auto">
-          <CardContent className="p-6">
-            <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-2">Login Required</h2>
-            <p className="text-muted-foreground">Please login to play Plinko</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  }, [rowCount, riskLevel, balls]);
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-          <Target className="w-8 h-8 inline mr-2" />
-          Plinko
-        </h1>
-        <p className="text-muted-foreground">Drop the ball and watch it bounce through the pegs to win big!</p>
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Game Area */}
-        <div className="lg:col-span-2">
-          <Card className="bg-gradient-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Plinko Board ({rowCount} Rows)</span>
-                <span className={`text-sm font-bold ${RISK_COLORS[riskLevel]}`}>{riskLevel.toUpperCase()} RISK</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <canvas
-                ref={canvasRef}
-                width={500}
-                height={400}
-                className="w-full h-auto border border-border rounded-lg bg-black/20"
+    <div className="p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Plinko Game</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col mb-4 md:mb-0">
+              <label className="text-sm font-medium mb-1">Bet Amount</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={betAmount}
+                onChange={(e) => setBetAmount(parseFloat(e.target.value))}
+                className="w-full max-w-xs"
               />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Controls */}
-        <div className="space-y-6">
-          <Card className="bg-gradient-card border-border">
-            <CardHeader>
-              <CardTitle>Game Controls</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Bet Amount</label>
-                <Input
-                  type="number"
-                  min="1"
-                  max={user.balance}
-                  value={betAmount}
-                  onChange={(e) => setBetAmount(Number(e.target.value))}
-                  className="bg-background"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Rows</label>
-                <Select value={rowCount.toString()} onValueChange={(value) => setRowCount(Number(value) as RowCount)}>
-                  <SelectTrigger className="bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="8">8 Rows</SelectItem>
-                    <SelectItem value="12">12 Rows</SelectItem>
-                    <SelectItem value="16">16 Rows</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Risk Level</label>
-                <Select value={riskLevel} onValueChange={(value: RiskLevel) => setRiskLevel(value)}>
-                  <SelectTrigger className="bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">{RISK_DESCRIPTIONS.low[rowCount]}</SelectItem>
-                    <SelectItem value="medium">{RISK_DESCRIPTIONS.medium[rowCount]}</SelectItem>
-                    <SelectItem value="high">{RISK_DESCRIPTIONS.high[rowCount]}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setBetAmount(Math.floor(betAmount / 2))}>
-                  1/2
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setBetAmount(Math.min(user.balance, betAmount * 2))}>
-                  2x
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setBetAmount(user.balance)}>
-                  Max
-                </Button>
-              </div>
-
-              <Button variant="casino" className="w-full" onClick={dropBall} disabled={betAmount <= 0 || betAmount > user.balance}>
-                Drop Ball - ${betAmount.toFixed(2)}
-              </Button>
-
-              <div className="text-center p-3 bg-gradient-accent rounded-lg">
-                <div className="text-sm text-muted-foreground">Balance</div>
-                <div className="text-lg font-bold">${user.balance.toFixed(2)}</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Game History */}
-          <Card className="bg-gradient-card border-border">
-            <CardHeader>
-              <CardTitle>Recent Results</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {gameHistory.length === 0 ? (
-                  <p className="text-muted-foreground">No games played yet</p>
-                ) : (
-                  gameHistory.map((game, index) => (
-                    <div key={index} className="flex justify-between items-center p-2 bg-background/50 rounded">
-                      <span className="text-sm">{game.multiplier.toFixed(1)}x</span>
-                      <span className={`text-sm font-bold ${game.multiplier >= 1 ? 'text-green-400' : 'text-red-400'}`}>
-                        {game.multiplier >= 1 ? '+' : ''}${game.amount.toFixed(2)}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            </div>
+            <div className="flex flex-col mb-4 md:mb-0">
+              <label className="text-sm font-medium mb-1">Risk Level</label>
+              <Select
+                value={riskLevel}
+                onValueChange={setRiskLevel}
+                className="w-full max-w-xs"
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select risk level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low" className={RISK_COLORS.low}>
+                    Low Risk (1x - 2x)
+                  </SelectItem>
+                  <SelectItem value="medium" className={RISK_COLORS.medium}>
+                    Medium Risk (1x - 10x)
+                  </SelectItem>
+                  <SelectItem value="high" className={RISK_COLORS.high}>
+                    High Risk (0.5x - 50x)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium mb-1">Row Count</label>
+              <Select
+                value={rowCount.toString()}
+                onValueChange={(value) => setRowCount(parseInt(value))}
+                className="w-full max-w-xs"
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select row count" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="8">8 Rows</SelectItem>
+                  <SelectItem value="12">12 Rows</SelectItem>
+                  <SelectItem value="16">16 Rows</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-center mb-4">
+            <Button onClick={dropBall} className="px-6 py-3 text-lg">
+              Drop Ball
+            </Button>
+          </div>
+          <div className="relative w-full h-96">
+            <canvas ref={canvasRef} className="absolute inset-0" />
+          </div>
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold mb-2">Game History</h3>
+            <div className="grid grid-cols-3 gap-2 text-sm text-center">
+              <div className="font-medium">Multiplier</div>
+              <div className="font-medium">Amount</div>
+              <div className="font-medium">Result</div>
+              {gameHistory.map((game, index) => (
+                <React.Fragment key={index}>
+                  <div>{game.multiplier}x</div>
+                  <div>${game.amount.toFixed(2)}</div>
+                  <div className={game.multiplier >= 1 ? 'text-green-500' : 'text-red-500'}>
+                    {game.multiplier >= 1 ? 'Win' : 'Loss'}
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
