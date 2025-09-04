@@ -16,6 +16,7 @@ interface Ball {
   vx: number;
   vy: number;
   id: number;
+  betAmount: number; // store bet per ball
 }
 
 const PAYOUTS: Record<RiskLevel, Record<RowCount, number[]>> = {
@@ -128,14 +129,12 @@ export default function Plinko() {
   const dropBall = () => {
     if (!user) return;
 
-    // Ensure the bet amount is valid and within the user's balance
-    const currentBetAmount = parseFloat(betAmount.toFixed(2)); // Round to 2 decimal places
+    const currentBetAmount = parseFloat(betAmount.toFixed(2));
     if (currentBetAmount <= 0 || currentBetAmount > user.balance) {
       toast.error('Invalid bet amount');
       return;
     }
 
-    // Deduct the bet amount from the user's balance
     updateBalance(-currentBetAmount);
 
     const canvas = canvasRef.current;
@@ -146,7 +145,8 @@ export default function Plinko() {
       y: 20,
       vx: (Math.random() - 0.5) * 2,
       vy: 0,
-      id: Date.now() + Math.random()
+      id: Date.now() + Math.random(),
+      betAmount: currentBetAmount, // store the bet per ball
     };
 
     setBalls(prev => [...prev, newBall]);
@@ -204,13 +204,14 @@ export default function Plinko() {
           const slotIndex = Math.floor(ballData.x / slotWidth);
           const finalSlot = Math.max(0, Math.min(slotCount - 1, slotIndex));
           const multiplier = currentMultipliers[finalSlot];
-          const winAmount = parseFloat((currentBetAmount * multiplier).toFixed(2)); // Ensure accurate payout calculation
+
+          const winAmount = parseFloat((ballData.betAmount * multiplier).toFixed(2));
 
           updateBalance(winAmount);
           setGameHistory(prev => [{ multiplier, amount: winAmount }, ...prev.slice(0, 9)]);
           addBetHistory({
             game: 'Plinko',
-            betAmount: currentBetAmount,
+            betAmount: ballData.betAmount,
             result: multiplier >= 1 ? 'win' : 'loss',
             payout: winAmount
           });
@@ -218,7 +219,7 @@ export default function Plinko() {
           if (multiplier >= 1) {
             toast.success(`Won ${multiplier}x! Received $${winAmount.toFixed(2)}`);
           } else {
-            toast.error(`Hit ${multiplier}x slot. Lost $${currentBetAmount.toFixed(2)}`);
+            toast.error(`Hit ${multiplier}x slot. Lost $${ballData.betAmount.toFixed(2)}`);
           }
         } else {
           updatedBalls.push(ballData);
