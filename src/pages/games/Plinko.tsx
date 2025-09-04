@@ -155,8 +155,8 @@ export default function Plinko() {
 
     const pegSpacingX = canvas.width / (rowCount + 1);
     const pegSpacingY = (canvas.height - 100) / rowCount;
-    const gravity = 0.3;
-    const bounce = 0.7;
+    const gravity = 0.5; // Increased gravity to make balls faster
+    const bounce = 1.2; // Increased bounce to make balls more bouncy
     const pegRadius = 4;
     const ballRadius = Math.max(6, Math.min(pegSpacingY * 0.5, 10)); // Adjusted ball size to ensure it hits pegs on smaller rows
 
