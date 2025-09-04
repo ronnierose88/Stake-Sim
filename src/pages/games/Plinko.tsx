@@ -203,13 +203,13 @@ export default function Plinko() {
           const slotIndex = Math.floor(ballData.x / slotWidth);
           const finalSlot = Math.max(0, Math.min(slotCount - 1, slotIndex));
           const multiplier = currentMultipliers[finalSlot];
-          const winAmount = betAmount * multiplier;
+          const winAmount = currentBetAmount * multiplier; // Use the captured bet amount
 
           updateBalance(winAmount);
           setGameHistory(prev => [{ multiplier, amount: winAmount }, ...prev.slice(0, 9)]);
           addBetHistory({
             game: 'Plinko',
-            betAmount,
+            betAmount: currentBetAmount,
             result: multiplier >= 1 ? 'win' : 'loss',
             payout: winAmount
           });
@@ -217,7 +217,7 @@ export default function Plinko() {
           if (multiplier >= 1) {
             toast.success(`Won ${multiplier}x! Received $${winAmount.toFixed(2)}`);
           } else {
-            toast.error(`Hit ${multiplier}x slot. Lost $${betAmount.toFixed(2)}`);
+            toast.error(`Hit ${multiplier}x slot. Lost $${currentBetAmount.toFixed(2)}`);
           }
         } else {
           updatedBalls.push(ballData);
