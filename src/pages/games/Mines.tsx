@@ -166,6 +166,35 @@ export default function Mines() {
     );
   }
 
+  // Calculate multipliers for the current board size and bomb count
+  const calculateMultipliers = () => {
+    const T = boardSize * boardSize; // Total tiles
+    const G = T - bombCount; // Safe tiles
+
+    const fairMult = (s: number) => (G - s) / (T - s);
+
+    const perClickMultipliers: number[] = [];
+    const cumulativeMultipliers: number[] = [];
+
+    let cumulative = 1;
+    for (let s = 0; s < G; s++) {
+      const multiplier = fairMult(s);
+      perClickMultipliers.push(multiplier);
+      cumulative *= multiplier;
+      cumulativeMultipliers.push(cumulative);
+    }
+
+    const finalFair = T / bombCount;
+
+    return {
+      perClickMultipliers,
+      cumulativeMultipliers,
+      finalFair,
+    };
+  };
+
+  const { perClickMultipliers, cumulativeMultipliers, finalFair } = calculateMultipliers();
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="text-center mb-8">
@@ -361,6 +390,37 @@ export default function Mines() {
                   </div>
                   <div className="text-sm text-muted-foreground mt-2">
                     Click tiles to reveal them. Cash out anytime to secure your winnings!
+                  </div>
+                </div>
+              )}
+
+              {/* Multipliers Info */}
+              {gameState === 'playing' && (
+                <div className="mt-6 p-4 bg-background rounded-lg border">
+                  <h3 className="text-lg font-semibold mb-2">Payout Multipliers</h3>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Per-Click Multiplier</div>
+                      {perClickMultipliers.map((mult, index) => (
+                        <div key={index} className="text-xl font-bold">
+                          {mult.toFixed(4)}
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Cumulative Multiplier</div>
+                      {cumulativeMultipliers.map((mult, index) => (
+                        <div key={index} className="text-xl font-bold">
+                          {mult.toFixed(4)}
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Final Payout Multiplier</div>
+                      <div className="text-xl font-bold">
+                        {finalFair.toFixed(4)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
