@@ -127,13 +127,14 @@ export default function Plinko() {
 
   const dropBall = () => {
     if (!user) return;
-    if (betAmount <= 0 || betAmount > user.balance) {
+    const currentBetAmount = betAmount; // Capture the current bet amount at the time of the bet
+
+    if (currentBetAmount <= 0 || currentBetAmount > user.balance) {
       toast.error('Invalid bet amount');
       return;
     }
 
-    const validBetAmount = Math.max(1, Math.min(betAmount, user.balance));
-    updateBalance(-validBetAmount);
+    updateBalance(-currentBetAmount);
 
     const canvas = canvasRef.current;
     if (!canvas) return;
