@@ -158,7 +158,7 @@ export default function Plinko() {
     const gravity = 0.3;
     const bounce = 0.7;
     const pegRadius = 4;
-    const ballRadius = Math.max(3, Math.min(pegSpacingY * 0.35, 6));
+    const ballRadius = Math.max(6, Math.min(pegSpacingY * 0.5, 10)); // Adjusted ball size to ensure it hits pegs on smaller rows
 
     setBalls(prevBalls => {
       const updatedBalls: Ball[] = [];
