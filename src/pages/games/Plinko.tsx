@@ -182,7 +182,10 @@ export default function Plinko() {
               const angle = Math.atan2(dy, dx);
               ballData.x = pegX + Math.cos(angle) * (pegRadius + ballRadius);
               ballData.y = pegY + Math.sin(angle) * (pegRadius + ballRadius);
-              ballData.vx = Math.cos(angle) * bounce + (Math.random() - 0.5) * 2;
+
+              // Adjust ball direction to ensure a 50/50 chance at each peg
+              const randomDirection = Math.random() < 0.5 ? -1 : 1; // 50/50 chance
+              ballData.vx = randomDirection * Math.abs(ballData.vx); // Apply random direction
               ballData.vy = Math.sin(angle) * bounce * 0.5;
             }
           }
