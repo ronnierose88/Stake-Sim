@@ -132,7 +132,9 @@ export default function Plinko() {
       return;
     }
 
-    updateBalance(-betAmount);
+    const validBetAmount = Math.max(1, Math.min(betAmount, user.balance));
+    updateBalance(-validBetAmount);
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
