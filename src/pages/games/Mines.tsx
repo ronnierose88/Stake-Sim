@@ -16,6 +16,7 @@ export default function Mines() {
   const [gameState, setGameState] = useState<GameState>('setup');
   const [board, setBoard] = useState<Cell[][]>([]);
   const [currentWinnings, setCurrentWinnings] = useState(0);
+  const [mines, setMines] = useState(5); // Default number of mines
 
   const boardSize = 5; // Fixed board size to 5x5
 
@@ -242,6 +243,20 @@ export default function Mines() {
                 <div className="text-xs text-muted-foreground mt-1">
                   Max: {maxBombs} bombs ({boardSize}×{boardSize} grid)
                 </div>
+              </div>
+
+              {/* Mines Slider */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Number of Mines</label>
+                <input
+                  type="range"
+                  min="1"
+                  max="24"
+                  value={mines}
+                  onChange={(e) => setMines(Number(e.target.value))}
+                  className="w-full"
+                />
+                <p className="text-center mt-2">{mines} Mines</p>
               </div>
 
               <div className="flex gap-2">
