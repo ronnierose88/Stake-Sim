@@ -3,7 +3,6 @@ import { useUser } from '@/contexts/UserContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Bomb, DollarSign, AlertTriangle, RotateCcw } from 'lucide-react';
 
@@ -14,10 +13,11 @@ export default function Mines() {
   const { user, updateBalance, addBetHistory } = useUser();
   const [betAmount, setBetAmount] = useState(10);
   const [bombCount, setBombCount] = useState(3);
-  const [boardSize, setBoardSize] = useState(5);
   const [gameState, setGameState] = useState<GameState>('setup');
   const [board, setBoard] = useState<Cell[][]>([]);
   const [currentWinnings, setCurrentWinnings] = useState(0);
+
+  const boardSize = 5; // Fixed board size to 5x5
 
   const startGame = () => {
     if (!user || betAmount <= 0 || betAmount > user.balance) {
@@ -226,24 +226,6 @@ export default function Mines() {
                   disabled={gameState !== 'setup'}
                   className="bg-background"
                 />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Board Size</label>
-                <Select value={boardSize.toString()} onValueChange={(value) => setBoardSize(Number(value))} disabled={gameState !== 'setup'}>
-                  <SelectTrigger className="bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3">3×3 Grid</SelectItem>
-                    <SelectItem value="4">4×4 Grid</SelectItem>
-                    <SelectItem value="5">5×5 Grid</SelectItem>
-                    <SelectItem value="6">6×6 Grid</SelectItem>
-                    <SelectItem value="7">7×7 Grid</SelectItem>
-                    <SelectItem value="8">8×8 Grid</SelectItem>
-                    <SelectItem value="10">10×10 Grid</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div>
