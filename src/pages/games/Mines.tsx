@@ -3,7 +3,6 @@ import { useUser } from '@/contexts/UserContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Bomb, DollarSign, AlertTriangle, RotateCcw } from 'lucide-react';
 
@@ -17,10 +16,8 @@ export default function Mines() {
   const [gameState, setGameState] = useState<GameState>('setup');
   const [board, setBoard] = useState<Cell[][]>([]);
   const [currentWinnings, setCurrentWinnings] = useState(0);
-  const [boardSize, setBoardSize] = useState(5); // Reintroduced adjustable board size
 
-  // Updated the maxBombs calculation to use the adjustable board size
-  const maxBombs = Math.floor((boardSize * boardSize) * 0.8); // Max 80% of tiles can be bombs
+  const boardSize = 5; // Fixed board size to 5x5
 
   const startGame = () => {
     if (!user || betAmount <= 0 || betAmount > user.balance) {
@@ -153,6 +150,8 @@ export default function Mines() {
     setCurrentWinnings(0);
   };
 
+  const maxBombs = Math.floor((boardSize * boardSize) * 0.8); // Max 80% of tiles can be bombs
+
   if (!user) {
     return (
       <div className="container mx-auto p-6 text-center">
@@ -243,20 +242,6 @@ export default function Mines() {
                 <div className="text-xs text-muted-foreground mt-1">
                   Max: {maxBombs} bombs ({boardSize}×{boardSize} grid)
                 </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Board Size</label>
-                <Select
-                  value={boardSize.toString()}
-                  onChange={(e) => setBoardSize(Number(e.target.value))}
-                  disabled={gameState !== 'setup'}
-                >
-                  <option value="5">5x5</option>
-                  <option value="6">6x6</option>
-                  <option value="7">7x7</option>
-                  <option value="8">8x8</option>
-                </Select>
               </div>
 
               <div className="flex gap-2">
