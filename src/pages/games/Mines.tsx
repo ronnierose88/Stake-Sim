@@ -39,7 +39,6 @@ const probabilities = {
 export default function Mines() {
   const { user, updateBalance, addBetHistory } = useUser();
   const [betAmount, setBetAmount] = useState(10);
-  const [bombCount, setBombCount] = useState(3);
   const [gameState, setGameState] = useState<GameState>('setup');
   const [board, setBoard] = useState<Cell[][]>([]);
   const [currentWinnings, setCurrentWinnings] = useState(0);
@@ -54,8 +53,8 @@ export default function Mines() {
     }
 
     const totalTiles = boardSize * boardSize;
-    if (bombCount >= totalTiles) {
-      toast.error('Too many bombs for board size');
+    if (mines >= totalTiles) {
+      toast.error('Too many mines for board size');
       return;
     }
 
@@ -74,7 +73,7 @@ export default function Mines() {
 
     // Randomly place bombs
     const bombPositions = new Set<string>();
-    while (bombPositions.size < bombCount) {
+    while (bombPositions.size < mines) {
       const row = Math.floor(Math.random() * boardSize);
       const col = Math.floor(Math.random() * boardSize);
       bombPositions.add(`${row}-${col}`);
@@ -99,7 +98,7 @@ export default function Mines() {
     setGameState('playing');
     setCurrentWinnings(0);
 
-    toast.success(`Game started! Find the safe tiles and avoid ${bombCount} bombs.`);
+    toast.success(`Game started! Find the safe tiles and avoid ${mines} bombs.`);
   };
 
   const revealTile = (row: number, col: number) => {
@@ -142,7 +141,7 @@ export default function Mines() {
 
     // Calculate current winnings
     const revealedSafeTiles = newBoard.flat().filter(cell => cell.revealed && !cell.isBomb).length;
-    const multiplier = calculateMultiplier(revealedSafeTiles, bombCount);
+    const multiplier = calculateMultiplier(revealedSafeTiles, mines);
     const winnings = betAmount * multiplier;
     setCurrentWinnings(winnings);
 
@@ -193,7 +192,7 @@ export default function Mines() {
   // Calculate multipliers for the current board size and bomb count
   const calculateMultipliers = () => {
     const T = boardSize * boardSize; // Total tiles
-    const G = T - bombCount; // Safe tiles
+    const G = T - mines; // Safe tiles
 
     const fairMult = (s: number) => (G - s) / (T - s);
 
@@ -208,7 +207,7 @@ export default function Mines() {
       cumulativeMultipliers.push(cumulative);
     }
 
-    const finalFair = T / bombCount;
+    const finalFair = T / mines;
 
     return {
       perClickMultipliers,
@@ -250,22 +249,6 @@ export default function Mines() {
                   disabled={gameState !== 'setup'}
                   className="bg-background"
                 />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Number of Bombs</label>
-                <Input
-                  type="number"
-                  min="1"
-                  max={maxBombs}
-                  value={bombCount}
-                  onChange={(e) => setBombCount(Math.min(maxBombs, Number(e.target.value)))}
-                  disabled={gameState !== 'setup'}
-                  className="bg-background"
-                />
-                <div className="text-xs text-muted-foreground mt-1">
-                  Max: {maxBombs} bombs ({boardSize}×{boardSize} grid)
-                </div>
               </div>
 
               {/* Mines Slider */}
@@ -345,7 +328,7 @@ export default function Mines() {
                 <div className="text-sm text-muted-foreground">Current Bet</div>
                 <div className="text-lg font-bold">${betAmount.toFixed(2)}</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  {boardSize}×{boardSize} • {bombCount} bombs
+                  {boardSize}×{boardSize} • {mines} bombs
                 </div>
               </div>
 
@@ -363,7 +346,7 @@ export default function Mines() {
             <CardHeader>
               <CardTitle>
                 {gameState === 'setup' && 'Setup Your Game'}
-                {gameState === 'playing' && `Find the Safe Tiles! (${bombCount} bombs hidden)`}
+                {gameState === 'playing' && `Find the Safe Tiles! (${mines} bombs hidden)`}
                 {gameState === 'ended' && 'Game Over'}
               </CardTitle>
             </CardHeader>
