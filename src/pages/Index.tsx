@@ -135,7 +135,9 @@ const Index = () => {
             >
               <CardHeader>
                 <div className="flex justify-center mb-4">
-                  <feature.icon className="w-8 h-8 text-accent-foreground" />
+                  <div className="w-16 h-16 bg-gradient-accent rounded-xl flex items-center justify-center shadow-neon-blue">
+                    <feature.icon className="w-8 h-8 text-accent-foreground" />
+                  </div>
                 </div>
                 <CardTitle className="text-lg">{feature.title}</CardTitle>
                 <CardDescription>{feature.description}</CardDescription>
